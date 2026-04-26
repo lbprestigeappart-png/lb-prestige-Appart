@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
-  Crown, Wifi, KeyRound, Tv, ChefHat, Car, BookOpen, Phone, Mail,
-  MessageSquare, FileText, Star, MapPin, CalendarDays, Send, ExternalLink, Sparkles
+  Crown, Wifi, KeyRound, Tv, ChefHat, Car, BookOpen, Phone,
+  MessageSquare, FileText, Star, MapPin, CalendarDays, Send, ExternalLink, Sparkles,
+  FileSignature, CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate, nightsBetween, formatDateTime } from "@/lib/format";
