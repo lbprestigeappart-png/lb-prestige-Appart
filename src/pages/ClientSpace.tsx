@@ -221,7 +221,33 @@ export default function ClientSpace() {
               <p className="text-sm text-muted-foreground whitespace-pre-line">{settings?.parking?.text}</p>
             </InfoCard>
             <InfoCard icon={BookOpen} title="Règlement intérieur">
-              <p className="text-sm text-muted-foreground whitespace-pre-line">{settings?.house_rules?.text}</p>
+              <p className="text-sm text-muted-foreground whitespace-pre-line mb-4">{settings?.house_rules?.text}</p>
+              {reservation.rules_signed_at ? (
+                <div className="flex items-center gap-2 p-3 rounded-md bg-gold/10 border border-gold/30">
+                  <CheckCircle2 className="w-4 h-4 text-gold shrink-0" />
+                  <div className="text-xs">
+                    <div className="font-medium text-foreground">Règlement signé</div>
+                    <div className="text-muted-foreground">
+                      par {reservation.rules_signed_name} • {formatDateTime(reservation.rules_signed_at)}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 rounded-md bg-secondary/50 border border-border space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-medium">
+                    <FileSignature className="w-3 h-3 text-gold" />
+                    Signature électronique requise
+                  </div>
+                  <Input
+                    placeholder="Votre nom et prénom complets"
+                    value={signName}
+                    onChange={(e) => setSignName(e.target.value)}
+                  />
+                  <Button onClick={signRules} disabled={signing} className="w-full gradient-gold text-noir text-xs">
+                    {signing ? "Signature…" : "Je certifie avoir lu et accepté le règlement"}
+                  </Button>
+                </div>
+              )}
             </InfoCard>
             <InfoCard icon={Phone} title="Contacts utiles">
               {settings?.useful_contacts?.phone && <KeyValue label="Téléphone" value={settings.useful_contacts.phone} />}
