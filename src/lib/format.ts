@@ -44,9 +44,26 @@ export function statusLabel(s: string): string {
     delivered: "Livré",
     read: "Lu",
     failed: "Échec",
+    error: "Erreur",
+    fallback_wa: "Lien WhatsApp",
+    manual_required: "À envoyer manuellement",
     paid: "Payé",
     partial: "Partiel",
     refunded: "Remboursé",
   };
   return map[s] ?? s;
+}
+
+export function statusColor(s: string): string {
+  const map: Record<string, string> = {
+    sent: "text-blue-400",
+    delivered: "text-green-400",
+    read: "text-gold",
+    failed: "text-red-400",
+    error: "text-red-400",
+    pending: "text-orange-400",
+    fallback_wa: "text-cyan-400",
+    manual_required: "text-yellow-400",
+  };
+  return map[s] ?? "text-muted-foreground";
 }

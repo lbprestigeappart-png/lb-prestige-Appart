@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Eye, Send, Copy } from "lucide-react";
+import { Plus, Search, Eye, Copy, CheckCircle2, FileSignature } from "lucide-react";
 import { toast } from "sonner";
-import { formatDate, nightsBetween, statusLabel, buildClientLink } from "@/lib/format";
+import { formatDate, formatDateTime, nightsBetween, statusLabel, buildClientLink } from "@/lib/format";
+import SendWhatsappButton from "@/components/admin/SendWhatsappButton";
 
 export default function ReservationsPage() {
   const [list, setList] = useState<any[]>([]);
@@ -19,7 +20,7 @@ export default function ReservationsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ client_id: "", check_in: "", check_out: "", guests: 2, suite_type: "Suite Premium", status: "confirmed", internal_notes: "" });
-  const [sending, setSending] = useState<string | null>(null);
+  // sending state moved to SendWhatsappButton
 
   async function load() {
     const [resv, cls] = await Promise.all([
@@ -44,16 +45,7 @@ export default function ReservationsPage() {
     }
   }
 
-  async function sendWelcome(r: any) {
-    setSending(r.id);
-    const { error } = await supabase.functions.invoke("send-whatsapp", {
-      body: { reservation_id: r.id, template_key: "welcome" },
-    });
-    setSending(null);
-    if (error) return toast.error(error.message);
-    toast.success("Message WhatsApp envoyé");
-    load();
-  }
+  // welcome send handled by SendWhatsappButton; auto-trigger via run-automations on create
 
   function copyLink(token: string) {
     navigator.clipboard.writeText(buildClientLink(token));
@@ -156,13 +148,29 @@ export default function ReservationsPage() {
                 <div className="text-sm text-muted-foreground">
                   {formatDate(r.check_in)} → {formatDate(r.check_out)} • {nightsBetween(r.check_in, r.check_out)} nuits • {r.guests} voyageur{r.guests > 1 ? "s" : ""}
                 </div>
-                <div className="text-xs text-muted-foreground mt-1">{r.clients?.phone}</div>
+                <div className="text-xs text-muted-foreground mt-1">{r.clients?.phone ?? "Pas de téléphone"}</div>
+                <div className="flex flex-wrap gap-3 mt-2 text-[11px]">
+                  {r.client_link_opened_at ? (
+                    <span className="inline-flex items-center gap-1 text-green-400">
+                      <CheckCircle2 className="w-3 h-3" /> Lien ouvert {formatDateTime(r.client_link_opened_at)}
+                      {r.client_link_open_count > 1 && ` (×${r.client_link_open_count})`}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">Lien non ouvert</span>
+                  )}
+                  {r.rules_signed_at && (
+                    <span className="inline-flex items-center gap-1 text-gold">
+                      <FileSignature className="w-3 h-3" /> Règlement signé
+                    </span>
+                  )}
+                  {r.whatsapp_welcome_sent && (
+                    <span className="text-blue-400">✓ Bienvenue envoyée</span>
+                  )}
+                </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 items-start">
                 <Button size="sm" variant="outline" onClick={() => copyLink(r.client_token)}><Copy className="w-3.5 h-3.5 mr-1" /> Lien</Button>
-                <Button size="sm" variant="outline" onClick={() => sendWelcome(r)} disabled={sending === r.id}>
-                  <Send className="w-3.5 h-3.5 mr-1" /> {sending === r.id ? "..." : "WhatsApp"}
-                </Button>
+                <SendWhatsappButton reservationId={r.id} phone={r.clients?.phone} onSent={load} />
                 <Link to={`/client/${r.client_token}`} target="_blank">
                   <Button size="sm" variant="ghost"><Eye className="w-3.5 h-3.5" /></Button>
                 </Link>

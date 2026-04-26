@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
-  Crown, Wifi, KeyRound, Tv, ChefHat, Car, BookOpen, Phone, Mail,
-  MessageSquare, FileText, Star, MapPin, CalendarDays, Send, ExternalLink, Sparkles
+  Crown, Wifi, KeyRound, Tv, ChefHat, Car, BookOpen, Phone,
+  MessageSquare, FileText, Star, MapPin, CalendarDays, Send, ExternalLink, Sparkles,
+  FileSignature, CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate, nightsBetween, formatDateTime } from "@/lib/format";
@@ -22,12 +23,34 @@ export default function ClientSpace() {
   const [msg, setMsg] = useState("");
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [signName, setSignName] = useState("");
+  const [signing, setSigning] = useState(false);
+
+  async function refresh() {
+    if (!token) return;
+    const { data: res } = await supabase.rpc("get_client_space", { _token: token });
+    const base: any = res;
+    if (!base) return;
+    const { data: r } = await supabase
+      .from("reservations").select("rules_signed_at, rules_signed_name, client_link_opened_at")
+      .eq("client_token", token).maybeSingle();
+    if (r) base.reservation = { ...base.reservation, ...r };
+    setData(base);
+  }
 
   useEffect(() => {
     (async () => {
       if (!token) return;
+      supabase.rpc("mark_client_link_opened", { _token: token });
       const { data: res } = await supabase.rpc("get_client_space", { _token: token });
-      setData(res);
+      const base: any = res;
+      if (base) {
+        const { data: r } = await supabase
+          .from("reservations").select("rules_signed_at, rules_signed_name, client_link_opened_at")
+          .eq("client_token", token).maybeSingle();
+        if (r) base.reservation = { ...base.reservation, ...r };
+        setData(base);
+      }
       setLoading(false);
       const { data: msgs } = await supabase.rpc("get_client_messages", { _token: token });
       setMessages((msgs as any) ?? []);
@@ -56,6 +79,17 @@ export default function ClientSpace() {
     if (error) return toast.error(error.message);
     toast.success("Merci pour votre avis !");
     setComment("");
+  }
+
+  async function signRules() {
+    if (!token || !signName.trim()) return toast.error("Veuillez entrer votre nom complet.");
+    setSigning(true);
+    const { error } = await supabase.rpc("sign_rules", { _token: token, _signed_name: signName.trim() });
+    setSigning(false);
+    if (error) return toast.error(error.message);
+    toast.success("Règlement intérieur signé. Merci !");
+    setSignName("");
+    refresh();
   }
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Chargement…</div>;
@@ -187,7 +221,33 @@ export default function ClientSpace() {
               <p className="text-sm text-muted-foreground whitespace-pre-line">{settings?.parking?.text}</p>
             </InfoCard>
             <InfoCard icon={BookOpen} title="Règlement intérieur">
-              <p className="text-sm text-muted-foreground whitespace-pre-line">{settings?.house_rules?.text}</p>
+              <p className="text-sm text-muted-foreground whitespace-pre-line mb-4">{settings?.house_rules?.text}</p>
+              {reservation.rules_signed_at ? (
+                <div className="flex items-center gap-2 p-3 rounded-md bg-gold/10 border border-gold/30">
+                  <CheckCircle2 className="w-4 h-4 text-gold shrink-0" />
+                  <div className="text-xs">
+                    <div className="font-medium text-foreground">Règlement signé</div>
+                    <div className="text-muted-foreground">
+                      par {reservation.rules_signed_name} • {formatDateTime(reservation.rules_signed_at)}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 rounded-md bg-secondary/50 border border-border space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-medium">
+                    <FileSignature className="w-3 h-3 text-gold" />
+                    Signature électronique requise
+                  </div>
+                  <Input
+                    placeholder="Votre nom et prénom complets"
+                    value={signName}
+                    onChange={(e) => setSignName(e.target.value)}
+                  />
+                  <Button onClick={signRules} disabled={signing} className="w-full gradient-gold text-noir text-xs">
+                    {signing ? "Signature…" : "Je certifie avoir lu et accepté le règlement"}
+                  </Button>
+                </div>
+              )}
             </InfoCard>
             <InfoCard icon={Phone} title="Contacts utiles">
               {settings?.useful_contacts?.phone && <KeyValue label="Téléphone" value={settings.useful_contacts.phone} />}
