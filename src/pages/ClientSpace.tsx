@@ -23,12 +23,31 @@ export default function ClientSpace() {
   const [msg, setMsg] = useState("");
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [signName, setSignName] = useState("");
+  const [signing, setSigning] = useState(false);
+
+  async function refresh() {
+    if (!token) return;
+    const { data: res } = await supabase.rpc("get_client_space", { _token: token });
+    setData(res);
+    // re-load reservation row to read rules_signed_at + open tracking
+    const { data: r } = await supabase
+      .from("reservations").select("rules_signed_at, rules_signed_name, client_link_opened_at")
+      .eq("client_token", token).maybeSingle();
+    if (r && res) setData({ ...res, reservation: { ...res.reservation, ...r } });
+  }
 
   useEffect(() => {
     (async () => {
       if (!token) return;
+      // Track open
+      supabase.rpc("mark_client_link_opened", { _token: token });
       const { data: res } = await supabase.rpc("get_client_space", { _token: token });
       setData(res);
+      const { data: r } = await supabase
+        .from("reservations").select("rules_signed_at, rules_signed_name, client_link_opened_at")
+        .eq("client_token", token).maybeSingle();
+      if (r && res) setData({ ...res, reservation: { ...res.reservation, ...r } });
       setLoading(false);
       const { data: msgs } = await supabase.rpc("get_client_messages", { _token: token });
       setMessages((msgs as any) ?? []);
