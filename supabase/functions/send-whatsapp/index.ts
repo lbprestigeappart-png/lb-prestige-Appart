@@ -70,7 +70,38 @@ Deno.serve(async (req) => {
 
     if (!toPhone) throw new Error("Numéro de téléphone client manquant");
 
-    // Insert pending log first
+    // Load WhatsApp configuration (mode + from numbers) from DB settings
+    const { data: cfgRow } = await supabase
+      .from("settings").select("value").eq("key", "whatsapp_config").maybeSingle();
+    const cfg = (cfgRow?.value ?? {}) as {
+      mode?: "sandbox" | "production";
+      from_sandbox?: string;
+      from_production?: string;
+      enabled?: boolean;
+    };
+
+    if (cfg.enabled === false) {
+      throw new Error("L'envoi WhatsApp est désactivé dans les paramètres.");
+    }
+
+    const mode = cfg.mode === "production" ? "production" : "sandbox";
+    // Priority: server secret override > DB setting > Twilio sandbox default
+    const SECRET_PROD = Deno.env.get("TWILIO_WHATSAPP_FROM_PRODUCTION");
+    const SECRET_SANDBOX = Deno.env.get("TWILIO_WHATSAPP_FROM_SANDBOX");
+    const LEGACY_FROM = Deno.env.get("TWILIO_WHATSAPP_FROM");
+
+    let fromNumber: string;
+    if (mode === "production") {
+      fromNumber = SECRET_PROD || cfg.from_production || LEGACY_FROM || "";
+      if (!fromNumber) {
+        throw new Error("Mode production activé mais aucun numéro WhatsApp Business configuré (settings.whatsapp_config.from_production ou secret TWILIO_WHATSAPP_FROM_PRODUCTION).");
+      }
+    } else {
+      fromNumber = SECRET_SANDBOX || cfg.from_sandbox || LEGACY_FROM || "whatsapp:+14155238886";
+    }
+    if (!fromNumber.startsWith("whatsapp:")) fromNumber = `whatsapp:${fromNumber}`;
+
+    // Insert pending log
     const { data: log } = await supabase.from("whatsapp_logs").insert({
       reservation_id: resId,
       template_key: tplKey,
@@ -80,8 +111,6 @@ Deno.serve(async (req) => {
       status: "pending",
     } as any).select().single();
 
-    // Call Twilio via gateway
-    const fromNumber = Deno.env.get("TWILIO_WHATSAPP_FROM") ?? "whatsapp:+14155238886"; // sandbox default
     const toFormatted = toPhone.startsWith("whatsapp:") ? toPhone : `whatsapp:${toPhone}`;
 
     const twResp = await fetch(`${GATEWAY_URL}/Messages.json`, {
