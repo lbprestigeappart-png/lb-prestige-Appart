@@ -13,7 +13,23 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        display: ['Cormorant Garamond', 'serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
       colors: {
+        gold: {
+          DEFAULT: "hsl(var(--gold))",
+          light: "hsl(var(--gold-light))",
+          dark: "hsl(var(--gold-dark))",
+        },
+        ivory: "hsl(var(--ivory))",
+        beige: "hsl(var(--beige))",
+        noir: {
+          DEFAULT: "hsl(var(--noir))",
+          soft: "hsl(var(--noir-soft))",
+          muted: "hsl(var(--noir-muted))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

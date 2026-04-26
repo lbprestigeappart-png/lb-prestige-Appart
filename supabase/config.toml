@@ -1,1 +1,10 @@
 project_id = "anovsvijqmzimhghslni"
+
+[functions.send-whatsapp]
+verify_jwt = false
+
+[functions.run-automations]
+verify_jwt = false
+
+[functions.scheduler]
+verify_jwt = false
