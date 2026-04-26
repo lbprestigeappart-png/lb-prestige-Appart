@@ -81,6 +81,17 @@ export default function ClientSpace() {
     setComment("");
   }
 
+  async function signRules() {
+    if (!token || !signName.trim()) return toast.error("Veuillez entrer votre nom complet.");
+    setSigning(true);
+    const { error } = await supabase.rpc("sign_rules", { _token: token, _signed_name: signName.trim() });
+    setSigning(false);
+    if (error) return toast.error(error.message);
+    toast.success("Règlement intérieur signé. Merci !");
+    setSignName("");
+    refresh();
+  }
+
   if (loading) return <div className="min-h-screen flex items-center justify-center">Chargement…</div>;
 
   if (!data) return (
