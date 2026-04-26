@@ -20,7 +20,7 @@ export default function ReservationsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ client_id: "", check_in: "", check_out: "", guests: 2, suite_type: "Suite Premium", status: "confirmed", internal_notes: "" });
-  const [sending, setSending] = useState<string | null>(null);
+  // sending state moved to SendWhatsappButton
 
   async function load() {
     const [resv, cls] = await Promise.all([
