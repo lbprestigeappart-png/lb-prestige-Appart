@@ -45,16 +45,7 @@ export default function ReservationsPage() {
     }
   }
 
-  async function sendWelcome(r: any) {
-    setSending(r.id);
-    const { error } = await supabase.functions.invoke("send-whatsapp", {
-      body: { reservation_id: r.id, template_key: "welcome" },
-    });
-    setSending(null);
-    if (error) return toast.error(error.message);
-    toast.success("Message WhatsApp envoyé");
-    load();
-  }
+  // welcome send handled by SendWhatsappButton; auto-trigger via run-automations on create
 
   function copyLink(token: string) {
     navigator.clipboard.writeText(buildClientLink(token));
