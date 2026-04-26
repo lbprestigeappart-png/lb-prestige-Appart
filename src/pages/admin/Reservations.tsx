@@ -33,7 +33,7 @@ export default function ReservationsPage() {
 
   async function create() {
     if (!form.client_id || !form.check_in || !form.check_out) return toast.error("Champs manquants");
-    const { data, error } = await supabase.from("reservations").insert(form).select("*, clients(first_name,phone)").single();
+    const { data, error } = await supabase.from("reservations").insert(form as any).select("*, clients(first_name,phone)").single();
     if (error) return toast.error(error.message);
     toast.success("Réservation créée");
     setOpen(false);

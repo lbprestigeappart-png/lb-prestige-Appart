@@ -30,7 +30,7 @@ export default function PaymentsPage() {
   async function create() {
     if (!form.reservation_id) return toast.error("Réservation requise");
     const payload = { ...form, paid_at: form.status === "paid" ? new Date().toISOString() : null };
-    const { error } = await supabase.from("payments").insert(payload);
+    const { error } = await supabase.from("payments").insert(payload as any);
     if (error) return toast.error(error.message);
     toast.success("Paiement enregistré");
     setOpen(false);
