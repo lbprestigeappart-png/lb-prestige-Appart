@@ -218,6 +218,8 @@ export type Database = {
           check_in: string
           check_out: string
           client_id: string
+          client_link_open_count: number
+          client_link_opened_at: string | null
           client_token: string
           created_at: string
           guests: number
@@ -225,6 +227,8 @@ export type Database = {
           internal_notes: string | null
           property_id: string | null
           reservation_code: string
+          rules_signed_at: string | null
+          rules_signed_name: string | null
           status: Database["public"]["Enums"]["reservation_status"]
           suite_type: string | null
           updated_at: string
@@ -234,6 +238,8 @@ export type Database = {
           check_in: string
           check_out: string
           client_id: string
+          client_link_open_count?: number
+          client_link_opened_at?: string | null
           client_token: string
           created_at?: string
           guests?: number
@@ -241,6 +247,8 @@ export type Database = {
           internal_notes?: string | null
           property_id?: string | null
           reservation_code: string
+          rules_signed_at?: string | null
+          rules_signed_name?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
           suite_type?: string | null
           updated_at?: string
@@ -250,6 +258,8 @@ export type Database = {
           check_in?: string
           check_out?: string
           client_id?: string
+          client_link_open_count?: number
+          client_link_opened_at?: string | null
           client_token?: string
           created_at?: string
           guests?: number
@@ -257,6 +267,8 @@ export type Database = {
           internal_notes?: string | null
           property_id?: string | null
           reservation_code?: string
+          rules_signed_at?: string | null
+          rules_signed_name?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
           suite_type?: string | null
           updated_at?: string
@@ -459,6 +471,7 @@ export type Database = {
           created_at: string
           error_message: string | null
           id: string
+          mode: string | null
           provider_message_id: string | null
           recipient_name: string | null
           recipient_phone: string
@@ -466,12 +479,14 @@ export type Database = {
           sent_at: string | null
           status: Database["public"]["Enums"]["whatsapp_status"]
           template_key: string | null
+          wa_link: string | null
         }
         Insert: {
           content: string
           created_at?: string
           error_message?: string | null
           id?: string
+          mode?: string | null
           provider_message_id?: string | null
           recipient_name?: string | null
           recipient_phone: string
@@ -479,12 +494,14 @@ export type Database = {
           sent_at?: string | null
           status?: Database["public"]["Enums"]["whatsapp_status"]
           template_key?: string | null
+          wa_link?: string | null
         }
         Update: {
           content?: string
           created_at?: string
           error_message?: string | null
           id?: string
+          mode?: string | null
           provider_message_id?: string | null
           recipient_name?: string | null
           recipient_phone?: string
@@ -492,6 +509,7 @@ export type Database = {
           sent_at?: string | null
           status?: Database["public"]["Enums"]["whatsapp_status"]
           template_key?: string | null
+          wa_link?: string | null
         }
         Relationships: [
           {
@@ -569,9 +587,14 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      mark_client_link_opened: { Args: { _token: string }; Returns: undefined }
       send_client_message: {
         Args: { _content: string; _token: string }
         Returns: string
+      }
+      sign_rules: {
+        Args: { _signed_name: string; _token: string }
+        Returns: undefined
       }
       submit_client_review: {
         Args: { _comment: string; _rating: number; _token: string }
@@ -596,7 +619,15 @@ export type Database = {
         | "in_progress"
         | "completed"
         | "cancelled"
-      whatsapp_status: "pending" | "sent" | "delivered" | "read" | "failed"
+      whatsapp_status:
+        | "pending"
+        | "sent"
+        | "delivered"
+        | "read"
+        | "failed"
+        | "fallback_wa"
+        | "manual_required"
+        | "error"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -743,7 +774,16 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
-      whatsapp_status: ["pending", "sent", "delivered", "read", "failed"],
+      whatsapp_status: [
+        "pending",
+        "sent",
+        "delivered",
+        "read",
+        "failed",
+        "fallback_wa",
+        "manual_required",
+        "error",
+      ],
     },
   },
 } as const
