@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Eye, Send, Copy } from "lucide-react";
+import { Plus, Search, Eye, Copy, CheckCircle2, FileSignature } from "lucide-react";
 import { toast } from "sonner";
-import { formatDate, nightsBetween, statusLabel, buildClientLink } from "@/lib/format";
+import { formatDate, formatDateTime, nightsBetween, statusLabel, buildClientLink } from "@/lib/format";
+import SendWhatsappButton from "@/components/admin/SendWhatsappButton";
 
 export default function ReservationsPage() {
   const [list, setList] = useState<any[]>([]);
