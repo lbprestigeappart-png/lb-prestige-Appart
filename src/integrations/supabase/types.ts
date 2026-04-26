@@ -14,16 +14,589 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          last_name: string | null
+          notes: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          last_name?: string | null
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string | null
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean
+          reservation_id: string
+          sender: Database["public"]["Enums"]["message_sender"]
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          reservation_id: string
+          sender: Database["public"]["Enums"]["message_sender"]
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          reservation_id?: string
+          sender?: Database["public"]["Enums"]["message_sender"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          link: string | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          notes: string | null
+          paid_at: string | null
+          payment_type: string | null
+          reference: string | null
+          reservation_id: string
+          status: Database["public"]["Enums"]["payment_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_type?: string | null
+          reference?: string | null
+          reservation_id: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_type?: string | null
+          reference?: string | null
+          reservation_id?: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      properties: {
+        Row: {
+          address: string | null
+          banner_message: string | null
+          banner_title: string | null
+          banner_url: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          is_default: boolean
+          location: string | null
+          name: string
+          subtitle: string | null
+          updated_at: string
+          whatsapp_number: string | null
+        }
+        Insert: {
+          address?: string | null
+          banner_message?: string | null
+          banner_title?: string | null
+          banner_url?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          location?: string | null
+          name: string
+          subtitle?: string | null
+          updated_at?: string
+          whatsapp_number?: string | null
+        }
+        Update: {
+          address?: string | null
+          banner_message?: string | null
+          banner_title?: string | null
+          banner_url?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          location?: string | null
+          name?: string
+          subtitle?: string | null
+          updated_at?: string
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
+      reservations: {
+        Row: {
+          check_in: string
+          check_out: string
+          client_id: string
+          client_token: string
+          created_at: string
+          guests: number
+          id: string
+          internal_notes: string | null
+          property_id: string | null
+          reservation_code: string
+          status: Database["public"]["Enums"]["reservation_status"]
+          suite_type: string | null
+          updated_at: string
+          whatsapp_welcome_sent: boolean
+        }
+        Insert: {
+          check_in: string
+          check_out: string
+          client_id: string
+          client_token: string
+          created_at?: string
+          guests?: number
+          id?: string
+          internal_notes?: string | null
+          property_id?: string | null
+          reservation_code: string
+          status?: Database["public"]["Enums"]["reservation_status"]
+          suite_type?: string | null
+          updated_at?: string
+          whatsapp_welcome_sent?: boolean
+        }
+        Update: {
+          check_in?: string
+          check_out?: string
+          client_id?: string
+          client_token?: string
+          created_at?: string
+          guests?: number
+          id?: string
+          internal_notes?: string | null
+          property_id?: string | null
+          reservation_code?: string
+          status?: Database["public"]["Enums"]["reservation_status"]
+          suite_type?: string | null
+          updated_at?: string
+          whatsapp_welcome_sent?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          client_id: string | null
+          comment: string | null
+          created_at: string
+          id: string
+          is_published: boolean
+          rating: number
+          reservation_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          rating: number
+          reservation_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          rating?: number
+          reservation_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      useful_documents: {
+        Row: {
+          created_at: string
+          display_order: number
+          external_url: string | null
+          file_size: string | null
+          file_type: string
+          id: string
+          is_public: boolean
+          storage_path: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          external_url?: string | null
+          file_size?: string | null
+          file_type?: string
+          id?: string
+          is_public?: boolean
+          storage_path?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          external_url?: string | null
+          file_size?: string | null
+          file_type?: string
+          id?: string
+          is_public?: boolean
+          storage_path?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_automations: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          key: string
+          name: string
+          offset_days: number
+          template_key: string
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          key: string
+          name: string
+          offset_days?: number
+          template_key: string
+          trigger_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          key?: string
+          name?: string
+          offset_days?: number
+          template_key?: string
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      whatsapp_logs: {
+        Row: {
+          content: string
+          created_at: string
+          error_message: string | null
+          id: string
+          provider_message_id: string | null
+          recipient_name: string | null
+          recipient_phone: string
+          reservation_id: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["whatsapp_status"]
+          template_key: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          provider_message_id?: string | null
+          recipient_name?: string | null
+          recipient_phone: string
+          reservation_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["whatsapp_status"]
+          template_key?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          provider_message_id?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string
+          reservation_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["whatsapp_status"]
+          template_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_logs_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_templates: {
+        Row: {
+          content: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          key: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          key: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          key?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_reservation_code: { Args: never; Returns: string }
+      generate_reservation_token: { Args: never; Returns: string }
+      get_client_messages: {
+        Args: { _token: string }
+        Returns: {
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean
+          reservation_id: string
+          sender: Database["public"]["Enums"]["message_sender"]
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "messages"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_client_space: { Args: { _token: string }; Returns: Json }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      send_client_message: {
+        Args: { _content: string; _token: string }
+        Returns: string
+      }
+      submit_client_review: {
+        Args: { _comment: string; _rating: number; _token: string }
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "owner"
+      message_sender: "admin" | "client"
+      notification_type:
+        | "reservation"
+        | "message"
+        | "arrival"
+        | "departure"
+        | "review"
+        | "payment"
+        | "system"
+      payment_status: "pending" | "partial" | "paid" | "refunded"
+      reservation_status:
+        | "pending"
+        | "confirmed"
+        | "in_progress"
+        | "completed"
+        | "cancelled"
+      whatsapp_status: "pending" | "sent" | "delivered" | "read" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +723,27 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "owner"],
+      message_sender: ["admin", "client"],
+      notification_type: [
+        "reservation",
+        "message",
+        "arrival",
+        "departure",
+        "review",
+        "payment",
+        "system",
+      ],
+      payment_status: ["pending", "partial", "paid", "refunded"],
+      reservation_status: [
+        "pending",
+        "confirmed",
+        "in_progress",
+        "completed",
+        "cancelled",
+      ],
+      whatsapp_status: ["pending", "sent", "delivered", "read", "failed"],
+    },
   },
 } as const
