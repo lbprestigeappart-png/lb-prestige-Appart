@@ -148,13 +148,29 @@ export default function ReservationsPage() {
                 <div className="text-sm text-muted-foreground">
                   {formatDate(r.check_in)} → {formatDate(r.check_out)} • {nightsBetween(r.check_in, r.check_out)} nuits • {r.guests} voyageur{r.guests > 1 ? "s" : ""}
                 </div>
-                <div className="text-xs text-muted-foreground mt-1">{r.clients?.phone}</div>
+                <div className="text-xs text-muted-foreground mt-1">{r.clients?.phone ?? "Pas de téléphone"}</div>
+                <div className="flex flex-wrap gap-3 mt-2 text-[11px]">
+                  {r.client_link_opened_at ? (
+                    <span className="inline-flex items-center gap-1 text-green-400">
+                      <CheckCircle2 className="w-3 h-3" /> Lien ouvert {formatDateTime(r.client_link_opened_at)}
+                      {r.client_link_open_count > 1 && ` (×${r.client_link_open_count})`}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">Lien non ouvert</span>
+                  )}
+                  {r.rules_signed_at && (
+                    <span className="inline-flex items-center gap-1 text-gold">
+                      <FileSignature className="w-3 h-3" /> Règlement signé
+                    </span>
+                  )}
+                  {r.whatsapp_welcome_sent && (
+                    <span className="text-blue-400">✓ Bienvenue envoyée</span>
+                  )}
+                </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 items-start">
                 <Button size="sm" variant="outline" onClick={() => copyLink(r.client_token)}><Copy className="w-3.5 h-3.5 mr-1" /> Lien</Button>
-                <Button size="sm" variant="outline" onClick={() => sendWelcome(r)} disabled={sending === r.id}>
-                  <Send className="w-3.5 h-3.5 mr-1" /> {sending === r.id ? "..." : "WhatsApp"}
-                </Button>
+                <SendWhatsappButton reservationId={r.id} phone={r.clients?.phone} onSent={load} />
                 <Link to={`/client/${r.client_token}`} target="_blank">
                   <Button size="sm" variant="ghost"><Eye className="w-3.5 h-3.5" /></Button>
                 </Link>
