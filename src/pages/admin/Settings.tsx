@@ -29,20 +29,9 @@ export default function SettingsPage() {
         <div className="text-xs text-muted-foreground mt-2">Rôles : {admins.filter((a) => a.user_id === user?.id).map((a) => a.role).join(", ")}</div>
       </Card>
 
-      <Card className="p-6 bg-card border-border mb-4">
-        <h2 className="font-display text-xl text-gold-gradient mb-3">Intégration WhatsApp (Twilio)</h2>
-        <p className="text-sm text-muted-foreground mb-3">
-          La connexion Twilio est gérée via le connecteur Lovable. Les appels passent par la passerelle sécurisée.
-        </p>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between"><span className="text-muted-foreground">Statut</span><span className="text-green-400">✓ Connecté</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Numéro émetteur</span><span className="font-mono text-xs">whatsapp:+14155238886 (Sandbox par défaut)</span></div>
-        </div>
-        <div className="mt-4 p-3 rounded-md bg-secondary text-xs text-muted-foreground">
-          <strong className="text-gold">Important :</strong> pour la production, configurez votre numéro WhatsApp Business approuvé dans le secret <code className="text-gold">TWILIO_WHATSAPP_FROM</code> (format <code>whatsapp:+E164</code>).
-          Si non défini, le sandbox Twilio est utilisé.
-        </div>
-      </Card>
+      <div className="mb-4">
+        <WhatsappConfig />
+      </div>
 
       <Card className="p-6 bg-card border-border">
         <h2 className="font-display text-xl text-gold-gradient mb-3">À propos</h2>
