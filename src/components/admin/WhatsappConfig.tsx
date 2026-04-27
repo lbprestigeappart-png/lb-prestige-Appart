@@ -100,6 +100,7 @@ export default function WhatsappConfig() {
   }
 
   const isProd = cfg.mode === "production";
+  const isManual = cfg.mode === "manual_wa_me";
 
   return (
     <Card className="p-6 bg-card border-border">
@@ -107,13 +108,17 @@ export default function WhatsappConfig() {
         <div className="flex items-center gap-3">
           <MessageSquare className="w-5 h-5 text-gold" />
           <div>
-            <h2 className="font-display text-xl text-gold-gradient">Intégration WhatsApp (Twilio)</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Bascule sandbox ↔ production et numéro émetteur</p>
+            <h2 className="font-display text-xl text-gold-gradient">Intégration WhatsApp</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Mode actif, bascule manuel ↔ Twilio</p>
           </div>
         </div>
-        <Badge variant="outline" className={isProd ? "border-green-500/40 text-green-400" : "border-orange-500/40 text-orange-400"}>
-          {isProd ? <ShieldCheck className="w-3 h-3 mr-1" /> : <FlaskConical className="w-3 h-3 mr-1" />}
-          {isProd ? "Production" : "Sandbox"}
+        <Badge variant="outline" className={
+          isProd ? "border-green-500/40 text-green-400" :
+          isManual ? "border-gold/40 text-gold" :
+          "border-orange-500/40 text-orange-400"
+        }>
+          {isProd ? <ShieldCheck className="w-3 h-3 mr-1" /> : isManual ? <Hand className="w-3 h-3 mr-1" /> : <FlaskConical className="w-3 h-3 mr-1" />}
+          {isProd ? "Production" : isManual ? "Manuel wa.me" : "Sandbox"}
         </Badge>
       </div>
 
@@ -126,18 +131,24 @@ export default function WhatsappConfig() {
         <Switch checked={cfg.enabled} onCheckedChange={(v) => update("enabled", v)} />
       </div>
 
-      {/* Mode toggle */}
-      <div className="flex items-center justify-between p-3 rounded-md bg-secondary/40 border border-border mb-4">
-        <div>
-          <Label className="text-sm">Mode production</Label>
-          <p className="text-xs text-muted-foreground">
-            Sandbox = numéro de test Twilio (le destinataire doit envoyer le code de jonction). Production = votre numéro WhatsApp Business approuvé.
-          </p>
+      {/* Mode selector */}
+      <div className="p-3 rounded-md bg-secondary/40 border border-border mb-4 space-y-2">
+        <Label className="text-sm">Mode d'envoi actif</Label>
+        <div className="grid grid-cols-3 gap-2">
+          {(["manual_wa_me", "sandbox", "production"] as Mode[]).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => update("mode", m)}
+              className={`p-2 rounded-md border text-xs transition ${cfg.mode === m ? "border-gold bg-gold/10 text-gold" : "border-border hover:border-gold/40"}`}
+            >
+              {m === "manual_wa_me" ? "Manuel wa.me" : m === "sandbox" ? "Sandbox Twilio" : "Production"}
+            </button>
+          ))}
         </div>
-        <Switch
-          checked={isProd}
-          onCheckedChange={(v) => update("mode", v ? "production" : "sandbox")}
-        />
+        <p className="text-[11px] text-muted-foreground">
+          <strong className="text-gold">Manuel wa.me</strong> (recommandé) : ouvre l'app WhatsApp avec message prérempli, vous validez l'envoi. Aucune dépendance Twilio.
+        </p>
       </div>
 
       {/* Sandbox fields */}
