@@ -8,10 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Send, Eye, ExternalLink, CheckCircle2, AlertCircle, Loader2, RefreshCw } from "lucide-react";
+import { Send, Eye, ExternalLink, CheckCircle2, XCircle, RefreshCw, Copy, Phone } from "lucide-react";
 import { toast } from "sonner";
-import { formatDateTime, statusLabel, statusColor, buildClientLink } from "@/lib/format";
-import { sendWhatsapp, renderTemplate, buildWaMeLink } from "@/lib/whatsapp";
+import { formatDateTime, statusLabel, statusColor, buildClientLink, normalizePhoneE164 } from "@/lib/format";
+import { sendWhatsapp, renderTemplate, buildWaMeLink, copyToClipboard, updateLogStatus } from "@/lib/whatsapp";
 
 export default function WhatsappPage() {
   const [reservations, setReservations] = useState<any[]>([]);
@@ -38,7 +38,6 @@ export default function WhatsappPage() {
   }
   useEffect(() => { load(); }, []);
 
-  // Live preview
   const selectedRes = reservations.find((r) => r.id === resId);
   const selectedTpl = templates.find((t) => t.key === tplKey);
   const previewContent = selectedTpl
@@ -53,6 +52,8 @@ export default function WhatsappPage() {
       })
     : "";
 
+  const previewPhone = normalizePhoneE164(selectedRes?.clients?.phone);
+
   async function sendTemplate() {
     if (!resId || !tplKey) return toast.error("Réservation et modèle requis");
     setBusy(true);
@@ -66,7 +67,7 @@ export default function WhatsappPage() {
     setBusy(true);
     const res = await sendWhatsapp({ phone: customPhone, content: customContent });
     setBusy(false);
-    if (res.success) { setCustomContent(""); }
+    if (res.success) setCustomContent("");
     load();
   }
 
@@ -81,19 +82,32 @@ export default function WhatsappPage() {
     load();
   }
 
-  function markSent(log: any) {
-    supabase.from("whatsapp_logs").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", log.id).then(() => {
-      toast.success("Marqué comme envoyé");
+  async function markSent(log: any) {
+    if (await updateLogStatus(log.id, "sent_manually")) {
+      toast.success("Marqué comme envoyé manuellement");
       load();
-    });
+    }
   }
 
-  const mode = cfg?.mode === "production" ? "production" : "sandbox";
+  async function markFailed(log: any) {
+    if (await updateLogStatus(log.id, "failed_manual")) {
+      toast.success("Marqué comme échec");
+      load();
+    }
+  }
+
+  const mode = cfg?.mode ?? "manual_wa_me";
   const enabled = cfg?.enabled !== false;
+
+  const modeLabel: Record<string, string> = {
+    manual_wa_me: "Manuel via wa.me (mode actif)",
+    sandbox: "Sandbox Twilio",
+    production: "Production WhatsApp Business",
+  };
 
   return (
     <div className="p-8 max-w-7xl">
-      <PageHeader title="WhatsApp" subtitle="Envoi, modèles, historique et fallback" />
+      <PageHeader title="WhatsApp" subtitle="Envoi manuel via wa.me, modèles, historique" />
 
       {/* Mode banner */}
       <Card className="p-4 bg-card border-border mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -101,13 +115,12 @@ export default function WhatsappPage() {
           <div className={`w-2 h-2 rounded-full ${enabled ? "bg-green-400" : "bg-red-400"} animate-pulse`} />
           <div>
             <div className="text-sm font-medium">
-              Mode actif : <span className="text-gold">{mode === "production" ? "Production WhatsApp Business" : "Sandbox Twilio"}</span>
+              Mode actif : <span className="text-gold">{modeLabel[mode] ?? mode}</span>
             </div>
             <div className="text-xs text-muted-foreground">
-              {enabled ? "Cascade activée : Twilio → wa.me → manuel" : "Envois désactivés dans les paramètres"}
-              {mode === "sandbox" && cfg?.sandbox_join_code && (
-                <> • Le destinataire doit envoyer <code className="text-gold">{cfg.sandbox_join_code}</code> au sandbox</>
-              )}
+              {mode === "manual_wa_me"
+                ? "Cliquer sur WhatsApp ouvre l'application/web wa.me avec message prérempli — vous validez l'envoi manuellement."
+                : "Twilio actif — vérifiez la configuration dans Réglages."}
             </div>
           </div>
         </div>
@@ -134,7 +147,10 @@ export default function WhatsappPage() {
                 </SelectContent>
               </Select>
               {selectedRes && !selectedRes.clients?.phone && (
-                <p className="text-xs text-yellow-400 mt-1">⚠ Ce client n'a pas de numéro — envoi manuel uniquement</p>
+                <p className="text-xs text-yellow-400 mt-1">⚠ Ce client n'a pas de numéro</p>
+              )}
+              {selectedRes && previewPhone && (
+                <p className="text-xs text-muted-foreground mt-1">Numéro formaté : <code className="text-gold">{previewPhone}</code></p>
               )}
             </div>
             <div>
@@ -149,22 +165,31 @@ export default function WhatsappPage() {
 
             {previewContent && (
               <div className="p-3 rounded-md bg-secondary/50 border border-border">
-                <div className="flex items-center gap-2 mb-2">
-                  <Eye className="w-3 h-3 text-gold" />
-                  <span className="text-xs font-medium text-muted-foreground">Aperçu</span>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <Eye className="w-3 h-3 text-gold" />
+                    <span className="text-xs font-medium text-muted-foreground">Aperçu</span>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => copyToClipboard(previewContent, "Message copié")} className="h-6 text-[11px]">
+                    <Copy className="w-3 h-3 mr-1" /> Copier
+                  </Button>
                 </div>
                 <pre className="text-xs whitespace-pre-wrap font-sans text-foreground">{previewContent}</pre>
               </div>
             )}
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button onClick={sendTemplate} disabled={busy || !resId || !tplKey} className="flex-1 gradient-gold text-noir">
-                {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-                Envoyer
+                <Send className="w-4 h-4 mr-2" /> Ouvrir WhatsApp
               </Button>
-              {selectedRes?.clients?.phone && previewContent && (
-                <Button variant="outline" onClick={() => window.open(buildWaMeLink(selectedRes.clients.phone, previewContent), "_blank")}>
+              {previewPhone && previewContent && (
+                <Button variant="outline" onClick={() => window.open(buildWaMeLink(previewPhone, previewContent), "_blank")}>
                   <ExternalLink className="w-4 h-4" />
+                </Button>
+              )}
+              {previewPhone && (
+                <Button variant="outline" onClick={() => copyToClipboard(previewPhone, "Numéro copié")} title="Copier numéro">
+                  <Phone className="w-4 h-4" />
                 </Button>
               )}
             </div>
@@ -176,21 +201,28 @@ export default function WhatsappPage() {
           <h2 className="font-display text-xl text-gold-gradient mb-4">Message libre</h2>
           <div className="space-y-3">
             <div>
-              <Label>Téléphone (format E.164)</Label>
-              <Input value={customPhone} onChange={(e) => setCustomPhone(e.target.value)} placeholder="+237..." />
+              <Label>Téléphone (international ou local)</Label>
+              <Input value={customPhone} onChange={(e) => setCustomPhone(e.target.value)} placeholder="+237 6XX XX XX XX" />
+              {customPhone && (
+                <p className="text-xs text-muted-foreground mt-1">Sera envoyé au format : <code className="text-gold">{normalizePhoneE164(customPhone)}</code></p>
+              )}
             </div>
             <div>
               <Label>Message</Label>
               <Textarea rows={5} value={customContent} onChange={(e) => setCustomContent(e.target.value)} />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button onClick={sendCustom} disabled={busy || !customPhone || !customContent} className="flex-1 gradient-gold text-noir">
-                {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-                Envoyer
+                <Send className="w-4 h-4 mr-2" /> Ouvrir WhatsApp
               </Button>
               {customPhone && customContent && (
                 <Button variant="outline" onClick={() => window.open(buildWaMeLink(customPhone, customContent), "_blank")}>
                   <ExternalLink className="w-4 h-4" />
+                </Button>
+              )}
+              {customContent && (
+                <Button variant="outline" onClick={() => copyToClipboard(customContent, "Message copié")}>
+                  <Copy className="w-4 h-4" />
                 </Button>
               )}
             </div>
@@ -217,23 +249,36 @@ export default function WhatsappPage() {
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-2">{l.content}</p>
                 {l.error_message && <p className="text-xs text-red-400 mt-1">{l.error_message}</p>}
-                {l.wa_link && (
-                  <a href={l.wa_link} target="_blank" rel="noopener noreferrer" className="text-xs text-cyan-400 hover:underline inline-flex items-center gap-1 mt-1">
-                    <ExternalLink className="w-3 h-3" /> Ouvrir le lien wa.me
-                  </a>
-                )}
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {l.wa_link && (
+                    <a href={l.wa_link} target="_blank" rel="noopener noreferrer" className="text-xs text-cyan-400 hover:underline inline-flex items-center gap-1">
+                      <ExternalLink className="w-3 h-3" /> Rouvrir wa.me
+                    </a>
+                  )}
+                  <button onClick={() => copyToClipboard(l.content, "Message copié")} className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+                    <Copy className="w-3 h-3" /> Copier message
+                  </button>
+                  <button onClick={() => copyToClipboard(l.recipient_phone, "Numéro copié")} className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+                    <Phone className="w-3 h-3" /> Copier numéro
+                  </button>
+                </div>
               </div>
               <div className="text-right shrink-0 flex flex-col items-end gap-1">
                 <div className={`text-xs font-medium ${statusColor(l.status)}`}>{statusLabel(l.status)}</div>
                 <div className="text-[10px] text-muted-foreground">{formatDateTime(l.created_at)}</div>
-                {(l.status === "error" || l.status === "failed") && (
-                  <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => retryLog(l)}>
-                    <RefreshCw className="w-3 h-3 mr-1" /> Retry
-                  </Button>
+                {(l.status === "opened_wa" || l.status === "manual_required" || l.status === "manual_sent_pending_confirmation") && (
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" className="h-6 text-[10px] text-green-400" onClick={() => markSent(l)}>
+                      <CheckCircle2 className="w-3 h-3 mr-1" /> Envoyé
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-6 text-[10px] text-red-400" onClick={() => markFailed(l)}>
+                      <XCircle className="w-3 h-3 mr-1" /> Échec
+                    </Button>
+                  </div>
                 )}
-                {l.status === "manual_required" && (
-                  <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => markSent(l)}>
-                    <CheckCircle2 className="w-3 h-3 mr-1" /> Fait
+                {(l.status === "error" || l.status === "failed" || l.status === "failed_manual") && (
+                  <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => retryLog(l)}>
+                    <RefreshCw className="w-3 h-3 mr-1" /> Réessayer
                   </Button>
                 )}
               </div>
