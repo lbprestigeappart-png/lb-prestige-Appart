@@ -24,9 +24,11 @@ export default function BannerPage() {
       banner_url: property.banner_url, name: property.name, subtitle: property.subtitle,
       location: property.location, contact_phone: property.contact_phone,
       contact_email: property.contact_email, whatsapp_number: property.whatsapp_number,
+      updated_at: new Date().toISOString(),
     }).eq("id", property.id);
     if (error) return toast.error(error.message);
-    toast.success("Enregistré");
+    toast.success("Enregistré — l'espace client est mis à jour en temps réel");
+    load();
   }
 
   async function uploadBanner(file: File) {
@@ -34,7 +36,9 @@ export default function BannerPage() {
     const { error } = await supabase.storage.from("banners").upload(path, file);
     if (error) return toast.error(error.message);
     const { data } = supabase.storage.from("banners").getPublicUrl(path);
-    setProperty({ ...property, banner_url: data.publicUrl });
+    // Add cache-buster to ensure clients see the new image immediately
+    const cacheBustedUrl = `${data.publicUrl}?t=${Date.now()}`;
+    setProperty({ ...property, banner_url: cacheBustedUrl });
     toast.success("Image téléversée — n'oubliez pas d'enregistrer");
   }
 
