@@ -7,9 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { MessageSquare, ShieldCheck, FlaskConical, Loader2 } from "lucide-react";
+import { MessageSquare, ShieldCheck, FlaskConical, Loader2, Hand } from "lucide-react";
 
-type Mode = "sandbox" | "production";
+type Mode = "manual_wa_me" | "sandbox" | "production";
 type WaCfg = {
   mode: Mode;
   from_sandbox: string;
@@ -19,7 +19,7 @@ type WaCfg = {
 };
 
 const DEFAULTS: WaCfg = {
-  mode: "sandbox",
+  mode: "manual_wa_me",
   from_sandbox: "whatsapp:+14155238886",
   from_production: "",
   sandbox_join_code: "",
