@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { MessageCircle, Loader2, ExternalLink, Copy, Phone } from "lucide-react";
-import { sendWhatsapp, buildWaMeLink, copyToClipboard, renderTemplate } from "@/lib/whatsapp";
+import { buildWaMeLink, copyToClipboard, renderTemplate } from "@/lib/whatsapp";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizePhoneE164, buildClientLink } from "@/lib/format";
 import { toast } from "sonner";
@@ -26,43 +26,81 @@ type Props = {
 export default function SendWhatsappButton({ reservationId, phone, onSent, size = "sm", variant = "outline" }: Props) {
   const [busy, setBusy] = useState(false);
   const [templates, setTemplates] = useState<any[]>([]);
+  const [reservation, setReservation] = useState<any>(null);
 
   useEffect(() => {
     supabase.from("whatsapp_templates").select("*").eq("is_active", true).then(({ data }) => {
       setTemplates(data ?? []);
     });
-  }, []);
-
-  async function handleSend(templateKey: string) {
-    setBusy(true);
-    await sendWhatsapp({ reservation_id: reservationId, template_key: templateKey });
-    setBusy(false);
-    onSent?.();
-  }
-
-  async function handleCopyMessage(templateKey: string) {
-    const tpl = templates.find((t) => t.key === templateKey);
-    if (!tpl) return;
-    // We need reservation context; fetch minimal data
-    const { data: r } = await supabase
+    supabase
       .from("reservations")
-      .select("reservation_code, client_token, check_in, check_out, suite_type, clients(first_name,last_name)")
-      .eq("id", reservationId).maybeSingle();
-    if (!r) return toast.error("Réservation introuvable");
-    const client: any = r.clients;
+      .select("reservation_code, client_token, check_in, check_out, suite_type, clients(first_name,last_name,phone)")
+      .eq("id", reservationId).maybeSingle()
+      .then(({ data }) => setReservation(data));
+  }, [reservationId]);
+
+  function buildMessage(templateKey: string): { content: string; phone: string; recipientName: string } | null {
+    if (!reservation) return null;
+    const tpl = templates.find((t) => t.key === templateKey);
+    if (!tpl) return null;
+    const client: any = reservation.clients;
     const content = renderTemplate(tpl.content, {
       prenom: client?.first_name ?? "",
       nom: client?.last_name ?? "",
-      lien: buildClientLink(r.client_token),
-      code: r.reservation_code,
-      arrivee: new Date(r.check_in).toLocaleDateString("fr-FR"),
-      depart: new Date(r.check_out).toLocaleDateString("fr-FR"),
-      suite: r.suite_type ?? "",
+      lien: buildClientLink(reservation.client_token),
+      code: reservation.reservation_code,
+      arrivee: new Date(reservation.check_in).toLocaleDateString("fr-FR"),
+      depart: new Date(reservation.check_out).toLocaleDateString("fr-FR"),
+      suite: reservation.suite_type ?? "",
     });
-    await copyToClipboard(content, "Message copié dans le presse-papier");
+    const cleanPhone = normalizePhoneE164(client?.phone ?? phone);
+    return { content, phone: cleanPhone, recipientName: `${client?.first_name ?? ""} ${client?.last_name ?? ""}`.trim() };
   }
 
-  const cleanPhone = normalizePhoneE164(phone);
+  function handleSend(templateKey: string) {
+    const built = buildMessage(templateKey);
+    if (!built) {
+      toast.error("Données manquantes");
+      return;
+    }
+    if (!built.phone) {
+      toast.error("Pas de numéro client");
+      return;
+    }
+    const wa_link = buildWaMeLink(built.phone, built.content);
+
+    // SYNC open — must happen in the click handler tick (Safari/iOS popup policy)
+    const win = window.open(wa_link, "_blank", "noopener,noreferrer");
+    if (!win) {
+      copyToClipboard(wa_link, "Pop-up bloqué — lien copié");
+    } else {
+      toast.success("WhatsApp ouvert");
+    }
+
+    // Fire-and-forget log (does not block window.open)
+    setBusy(true);
+    supabase.from("whatsapp_logs").insert({
+      reservation_id: reservationId,
+      template_key: templateKey,
+      recipient_phone: built.phone,
+      recipient_name: built.recipientName,
+      content: built.content,
+      wa_link,
+      mode: "wa_link",
+      status: "opened_wa" as any,
+    }).then(() => {
+      setBusy(false);
+      onSent?.();
+    });
+  }
+
+  function handleCopyMessage(templateKey: string) {
+    const built = buildMessage(templateKey);
+    if (!built) return toast.error("Données manquantes");
+    copyToClipboard(built.content, "Message copié");
+  }
+
+  const cleanPhone = normalizePhoneE164(reservation?.clients?.phone ?? phone);
 
   return (
     <DropdownMenu>
@@ -74,7 +112,7 @@ export default function SendWhatsappButton({ reservationId, phone, onSent, size 
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-72">
         <DropdownMenuLabel className="text-xs">
-          {cleanPhone ? `Mode manuel wa.me → ${cleanPhone}` : "⚠ Pas de téléphone"}
+          {cleanPhone ? `wa.me → ${cleanPhone}` : "⚠ Pas de téléphone"}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {(templates.length ? templates : Object.entries(TEMPLATE_LABELS).map(([k, n]) => ({ key: k, name: n }))).map((t: any) => (
@@ -94,7 +132,7 @@ export default function SendWhatsappButton({ reservationId, phone, onSent, size 
         {cleanPhone && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => window.open(buildWaMeLink(cleanPhone, ""), "_blank")} className="text-xs">
+            <DropdownMenuItem onClick={() => window.open(buildWaMeLink(cleanPhone, ""), "_blank", "noopener,noreferrer")} className="text-xs">
               <ExternalLink className="w-3 h-3 mr-2" /> Ouvrir wa.me (vide)
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => copyToClipboard(cleanPhone, "Numéro copié")} className="text-xs">

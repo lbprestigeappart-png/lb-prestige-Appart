@@ -56,18 +56,53 @@ export default function WhatsappPage() {
 
   async function sendTemplate() {
     if (!resId || !tplKey) return toast.error("Réservation et modèle requis");
+    if (!previewPhone) return toast.error("Pas de numéro client");
+    if (!previewContent) return toast.error("Aperçu vide");
+
+    const wa_link = buildWaMeLink(previewPhone, previewContent);
+    // SYNC open in click handler
+    const win = window.open(wa_link, "_blank", "noopener,noreferrer");
+    if (!win) await copyToClipboard(wa_link, "Pop-up bloqué — lien copié");
+    else toast.success("WhatsApp ouvert");
+
     setBusy(true);
-    await sendWhatsapp({ reservation_id: resId, template_key: tplKey });
+    await supabase.from("whatsapp_logs").insert({
+      reservation_id: resId,
+      template_key: tplKey,
+      recipient_phone: previewPhone,
+      recipient_name: `${selectedRes?.clients?.first_name ?? ""} ${selectedRes?.clients?.last_name ?? ""}`.trim(),
+      content: previewContent,
+      wa_link,
+      mode: "wa_link",
+      status: "opened_wa" as any,
+    });
     setBusy(false);
     load();
   }
 
   async function sendCustom() {
     if (!customPhone || !customContent) return toast.error("Téléphone et message requis");
+    const cleanPhone = normalizePhoneE164(customPhone);
+    if (!cleanPhone) return toast.error("Numéro invalide");
+
+    const wa_link = buildWaMeLink(cleanPhone, customContent);
+    const win = window.open(wa_link, "_blank", "noopener,noreferrer");
+    if (!win) await copyToClipboard(wa_link, "Pop-up bloqué — lien copié");
+    else toast.success("WhatsApp ouvert");
+
     setBusy(true);
-    const res = await sendWhatsapp({ phone: customPhone, content: customContent });
+    await supabase.from("whatsapp_logs").insert({
+      reservation_id: null,
+      template_key: null,
+      recipient_phone: cleanPhone,
+      recipient_name: null,
+      content: customContent,
+      wa_link,
+      mode: "wa_link",
+      status: "opened_wa" as any,
+    });
     setBusy(false);
-    if (res.success) setCustomContent("");
+    setCustomContent("");
     load();
   }
 
