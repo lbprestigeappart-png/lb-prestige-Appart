@@ -33,6 +33,21 @@ export function formatPhone(p?: string | null): string {
   return p.replace(/(\+\d{1,3})(\d{1,3})(\d{2,3})(\d{2,3})(\d{2,3})/, "$1 $2 $3 $4 $5");
 }
 
+export function formatFCFA(amount: number | string | null | undefined): string {
+  const n = Number(amount ?? 0);
+  if (Number.isNaN(n)) return "0 FCFA";
+  return `${n.toLocaleString("fr-FR")} FCFA`;
+}
+
+export function normalizePhoneE164(phone?: string | null, defaultCountry: string = "237"): string {
+  if (!phone) return "";
+  let p = phone.trim().replace(/[\s().-]/g, "");
+  if (p.startsWith("00")) p = "+" + p.slice(2);
+  if (p.startsWith("+")) return p;
+  p = p.replace(/^0+/, "");
+  return `+${defaultCountry}${p}`;
+}
+
 export function statusLabel(s: string): string {
   const map: Record<string, string> = {
     pending: "En attente",
@@ -50,6 +65,14 @@ export function statusLabel(s: string): string {
     paid: "Payé",
     partial: "Partiel",
     refunded: "Remboursé",
+    unpaid: "Non payé",
+    advance: "Avance versée",
+    settled: "Soldé",
+    unset: "Prix non défini",
+    opened_wa: "Lien WhatsApp ouvert",
+    manual_sent_pending_confirmation: "En attente de confirmation",
+    sent_manually: "Envoyé manuellement",
+    failed_manual: "Échec manuel",
   };
   return map[s] ?? s;
 }
@@ -60,10 +83,17 @@ export function statusColor(s: string): string {
     delivered: "text-green-400",
     read: "text-gold",
     failed: "text-red-400",
+    failed_manual: "text-red-400",
     error: "text-red-400",
     pending: "text-orange-400",
     fallback_wa: "text-cyan-400",
+    opened_wa: "text-cyan-400",
     manual_required: "text-yellow-400",
+    manual_sent_pending_confirmation: "text-yellow-400",
+    sent_manually: "text-green-400",
+    unpaid: "text-red-400",
+    advance: "text-orange-400",
+    settled: "text-green-400",
   };
   return map[s] ?? "text-muted-foreground";
 }
