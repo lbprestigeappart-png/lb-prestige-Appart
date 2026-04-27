@@ -42,19 +42,21 @@ export default function ClientSpace() {
     (async () => {
       if (!token) return;
       supabase.rpc("mark_client_link_opened", { _token: token });
-      const { data: res } = await supabase.rpc("get_client_space", { _token: token });
-      const base: any = res;
-      if (base) {
-        const { data: r } = await supabase
-          .from("reservations").select("rules_signed_at, rules_signed_name, client_link_opened_at")
-          .eq("client_token", token).maybeSingle();
-        if (r) base.reservation = { ...base.reservation, ...r };
-        setData(base);
-      }
+      await refresh();
       setLoading(false);
       const { data: msgs } = await supabase.rpc("get_client_messages", { _token: token });
       setMessages((msgs as any) ?? []);
     })();
+  }, [token]);
+
+  // Realtime: refresh banner/property when admin updates it
+  useEffect(() => {
+    if (!token) return;
+    const ch = supabase.channel(`property-updates-${token}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "properties" }, () => refresh())
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "settings" }, () => refresh())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
   }, [token]);
 
   useEffect(() => {
