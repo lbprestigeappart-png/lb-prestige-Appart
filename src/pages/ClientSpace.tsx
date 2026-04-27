@@ -114,7 +114,11 @@ export default function ClientSpace() {
       {/* Banner */}
       <header className="relative overflow-hidden">
         {property?.banner_url ? (
-          <img src={property.banner_url} alt="" className="w-full h-64 md:h-80 object-cover" />
+          <img
+            src={`${property.banner_url}${property.banner_url.includes("?") ? "&" : "?"}v=${Date.now()}`}
+            alt={property?.banner_title ?? property?.name ?? "Bannière"}
+            className="w-full h-64 md:h-80 object-cover"
+          />
         ) : (
           <div className="w-full h-64 md:h-80 bg-noir relative">
             <div className="absolute inset-0 opacity-20" style={{ background: "var(--gradient-gold)" }} />
@@ -124,7 +128,7 @@ export default function ClientSpace() {
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full gradient-gold mb-3 shadow-gold">
             <Crown className="w-6 h-6 text-noir" />
           </div>
-          <h1 className="font-display text-4xl md:text-5xl text-gold-gradient mb-1">{property?.name ?? "LB Prestige Appart"}</h1>
+          <h1 className="font-display text-4xl md:text-5xl text-gold-gradient mb-1">{property?.banner_title || property?.name || "LB Prestige Appart"}</h1>
           <p className="text-xs tracking-[0.3em] text-ivory/80 uppercase">{property?.subtitle}</p>
         </div>
       </header>
