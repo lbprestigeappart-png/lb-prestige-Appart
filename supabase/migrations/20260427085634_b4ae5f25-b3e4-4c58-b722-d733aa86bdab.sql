@@ -1,0 +1,1 @@
+ALTER VIEW public.reservation_payment_summary SET (security_invoker = true);
