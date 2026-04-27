@@ -64,7 +64,7 @@ export default function BannerPage() {
         <div>
           <Label>Image bannière</Label>
           <Input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && uploadBanner(e.target.files[0])} />
-          {property.banner_url && <img src={`${property.banner_url}${property.banner_url.includes("?") ? "&" : "?"}v=${Date.now()}`} alt="" className="mt-2 rounded-lg w-full max-h-48 object-cover" />}
+          {property.banner_url && <img key={property.banner_url} src={property.banner_url} alt="Aperçu bannière" className="mt-2 rounded-lg w-full max-h-48 object-cover" />}
         </div>
         <Button onClick={save} className="gradient-gold text-noir">Enregistrer</Button>
       </Card>

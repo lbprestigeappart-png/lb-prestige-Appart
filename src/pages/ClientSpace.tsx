@@ -115,7 +115,8 @@ export default function ClientSpace() {
       <header className="relative overflow-hidden">
         {property?.banner_url ? (
           <img
-            src={`${property.banner_url}${property.banner_url.includes("?") ? "&" : "?"}v=${Date.now()}`}
+            key={property.banner_url}
+            src={property.banner_url}
             alt={property?.banner_title ?? property?.name ?? "Bannière"}
             className="w-full h-64 md:h-80 object-cover"
           />
