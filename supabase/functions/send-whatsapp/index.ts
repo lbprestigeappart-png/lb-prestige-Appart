@@ -101,13 +101,30 @@ Deno.serve(async (req) => {
     const { data: cfgRow } = await supabase
       .from("settings").select("value").eq("key", "whatsapp_config").maybeSingle();
     const cfg = (cfgRow?.value ?? {}) as {
-      mode?: "sandbox" | "production";
+      mode?: "sandbox" | "production" | "manual_wa_me";
       from_sandbox?: string;
       from_production?: string;
       sandbox_join_code?: string;
       enabled?: boolean;
       auto_fallback?: boolean;
     };
+
+    // MANUAL_WA_ME MODE: short-circuit Twilio entirely, always return wa.me link
+    if ((cfg.mode === "manual_wa_me" || force_mode === "wa_link") && force_mode !== "production" && force_mode !== "sandbox") {
+      const waLink = buildWaLink(toPhone, messageContent!);
+      const { data: log } = await supabase.from("whatsapp_logs").insert({
+        reservation_id: resId, template_key: tplKey, recipient_name: recipientName,
+        recipient_phone: toPhone, content: messageContent, status: "opened_wa",
+        mode: "manual_wa_me", wa_link: waLink,
+      } as any).select().single();
+
+      if (resId && template_key === "welcome") {
+        await supabase.from("reservations").update({ whatsapp_welcome_sent: true }).eq("id", resId);
+      }
+      return new Response(JSON.stringify({
+        success: true, mode: "wa_link", wa_link: waLink, log_id: log?.id,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     if (cfg.enabled === false && force_mode !== "wa_link" && force_mode !== "manual") {
       // Disabled → fallback to wa.me link

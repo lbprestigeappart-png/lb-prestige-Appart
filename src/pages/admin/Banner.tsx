@@ -24,9 +24,11 @@ export default function BannerPage() {
       banner_url: property.banner_url, name: property.name, subtitle: property.subtitle,
       location: property.location, contact_phone: property.contact_phone,
       contact_email: property.contact_email, whatsapp_number: property.whatsapp_number,
+      updated_at: new Date().toISOString(),
     }).eq("id", property.id);
     if (error) return toast.error(error.message);
-    toast.success("Enregistré");
+    toast.success("Enregistré — l'espace client est mis à jour en temps réel");
+    load();
   }
 
   async function uploadBanner(file: File) {
@@ -34,7 +36,9 @@ export default function BannerPage() {
     const { error } = await supabase.storage.from("banners").upload(path, file);
     if (error) return toast.error(error.message);
     const { data } = supabase.storage.from("banners").getPublicUrl(path);
-    setProperty({ ...property, banner_url: data.publicUrl });
+    // Add cache-buster to ensure clients see the new image immediately
+    const cacheBustedUrl = `${data.publicUrl}?t=${Date.now()}`;
+    setProperty({ ...property, banner_url: cacheBustedUrl });
     toast.success("Image téléversée — n'oubliez pas d'enregistrer");
   }
 
@@ -60,7 +64,7 @@ export default function BannerPage() {
         <div>
           <Label>Image bannière</Label>
           <Input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && uploadBanner(e.target.files[0])} />
-          {property.banner_url && <img src={property.banner_url} alt="" className="mt-2 rounded-lg w-full max-h-48 object-cover" />}
+          {property.banner_url && <img src={`${property.banner_url}${property.banner_url.includes("?") ? "&" : "?"}v=${Date.now()}`} alt="" className="mt-2 rounded-lg w-full max-h-48 object-cover" />}
         </div>
         <Button onClick={save} className="gradient-gold text-noir">Enregistrer</Button>
       </Card>

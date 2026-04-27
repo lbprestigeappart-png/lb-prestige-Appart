@@ -77,6 +77,13 @@ export type Database = {
             foreignKeyName: "messages_reservation_id_fkey"
             columns: ["reservation_id"]
             isOneToOne: false
+            referencedRelation: "reservation_payment_summary"
+            referencedColumns: ["reservation_id"]
+          },
+          {
+            foreignKeyName: "messages_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
             referencedRelation: "reservations"
             referencedColumns: ["id"]
           },
@@ -157,6 +164,13 @@ export type Database = {
             foreignKeyName: "payments_reservation_id_fkey"
             columns: ["reservation_id"]
             isOneToOne: false
+            referencedRelation: "reservation_payment_summary"
+            referencedColumns: ["reservation_id"]
+          },
+          {
+            foreignKeyName: "payments_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
             referencedRelation: "reservations"
             referencedColumns: ["id"]
           },
@@ -231,6 +245,7 @@ export type Database = {
           rules_signed_name: string | null
           status: Database["public"]["Enums"]["reservation_status"]
           suite_type: string | null
+          total_price: number
           updated_at: string
           whatsapp_welcome_sent: boolean
         }
@@ -251,6 +266,7 @@ export type Database = {
           rules_signed_name?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
           suite_type?: string | null
+          total_price?: number
           updated_at?: string
           whatsapp_welcome_sent?: boolean
         }
@@ -271,6 +287,7 @@ export type Database = {
           rules_signed_name?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
           suite_type?: string | null
+          total_price?: number
           updated_at?: string
           whatsapp_welcome_sent?: boolean
         }
@@ -326,6 +343,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservation_payment_summary"
+            referencedColumns: ["reservation_id"]
           },
           {
             foreignKeyName: "reviews_reservation_id_fkey"
@@ -516,6 +540,13 @@ export type Database = {
             foreignKeyName: "whatsapp_logs_reservation_id_fkey"
             columns: ["reservation_id"]
             isOneToOne: false
+            referencedRelation: "reservation_payment_summary"
+            referencedColumns: ["reservation_id"]
+          },
+          {
+            foreignKeyName: "whatsapp_logs_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
             referencedRelation: "reservations"
             referencedColumns: ["id"]
           },
@@ -556,7 +587,16 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      reservation_payment_summary: {
+        Row: {
+          paid_amount: number | null
+          payment_status_label: string | null
+          remaining_amount: number | null
+          reservation_id: string | null
+          total_price: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       generate_reservation_code: { Args: never; Returns: string }
@@ -628,6 +668,10 @@ export type Database = {
         | "fallback_wa"
         | "manual_required"
         | "error"
+        | "opened_wa"
+        | "manual_sent_pending_confirmation"
+        | "sent_manually"
+        | "failed_manual"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -783,6 +827,10 @@ export const Constants = {
         "fallback_wa",
         "manual_required",
         "error",
+        "opened_wa",
+        "manual_sent_pending_confirmation",
+        "sent_manually",
+        "failed_manual",
       ],
     },
   },
