@@ -430,3 +430,31 @@ function KeyValue({ label, value }: { label: string; value?: string }) {
     </div>
   );
 }
+
+function IdUploadFields({ idNumber, setIdNumber, setFrontFile, setBackFile, onSubmit, uploading, frontFile, backFile }: any) {
+  return (
+    <div className="space-y-2">
+      <Input
+        placeholder="Numéro de la CNI"
+        value={idNumber}
+        onChange={(e) => setIdNumber(e.target.value)}
+      />
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Recto</Label>
+          <Input type="file" accept="image/*" onChange={(e) => setFrontFile(e.target.files?.[0] ?? null)} />
+          {frontFile && <div className="text-[10px] text-muted-foreground mt-1 truncate">{frontFile.name}</div>}
+        </div>
+        <div>
+          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Verso</Label>
+          <Input type="file" accept="image/*" onChange={(e) => setBackFile(e.target.files?.[0] ?? null)} />
+          {backFile && <div className="text-[10px] text-muted-foreground mt-1 truncate">{backFile.name}</div>}
+        </div>
+      </div>
+      <Button onClick={onSubmit} disabled={uploading} className="w-full gradient-gold text-noir text-xs">
+        {uploading ? "Envoi…" : "Envoyer ma pièce d'identité"}
+      </Button>
+    </div>
+  );
+}
+
