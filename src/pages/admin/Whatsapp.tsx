@@ -13,6 +13,25 @@ import { toast } from "sonner";
 import { formatDateTime, statusLabel, statusColor, buildClientLink, normalizePhoneE164 } from "@/lib/format";
 import { sendWhatsapp, renderTemplate, buildWaMeLink, copyToClipboard, updateLogStatus } from "@/lib/whatsapp";
 
+/** Rend le message avec les liens cliquables (façon WhatsApp) */
+function renderPreviewWithLinks(text: string) {
+  const parts = text.split(/(https?:\/\/\S+)/g);
+  return parts.map((p, i) =>
+    /^https?:\/\//.test(p)
+      ? <a key={i} href={p} target="_blank" rel="noopener noreferrer" className="text-sky-300 underline break-all">{p}</a>
+      : <span key={i}>{p}</span>
+  );
+}
+
+function VarBadge({ label, value }: { label: string; value?: string | null }) {
+  const ok = !!value;
+  return (
+    <span className={`px-2 py-0.5 rounded border ${ok ? "bg-green-500/10 border-green-500/30 text-green-400" : "bg-red-500/10 border-red-500/30 text-red-400"}`}>
+      {`{${label}}`} {ok ? "✓" : "✗"} {ok && <span className="text-muted-foreground ml-1 truncate inline-block max-w-[120px] align-bottom">{value}</span>}
+    </span>
+  );
+}
+
 export default function WhatsappPage() {
   const [reservations, setReservations] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
