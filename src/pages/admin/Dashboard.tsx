@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import PageHeader from "@/components/admin/PageHeader";
 import { Card } from "@/components/ui/card";
-import { CalendarRange, Users, MessageSquare, Star, Crown, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CalendarRange, Users, MessageSquare, Star, Crown, TrendingUp, Plus, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatDate, nightsBetween } from "@/lib/format";
+import salonHero from "@/assets/salon-hero.jpg";
 
 type Stats = {
   totalReservations: number;
@@ -49,9 +50,35 @@ export default function AdminDashboard() {
     { label: "Performance", value: "★★★★★", icon: TrendingUp, color: "text-gold-light" },
   ];
 
+  const today = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
   return (
     <div className="p-8 max-w-7xl">
-      <PageHeader title="Tableau de bord" subtitle="Vue d'ensemble de votre conciergerie d'exception" />
+      {/* Luxury hero banner with salon photo */}
+      <section className="relative overflow-hidden rounded-2xl mb-8 border border-gold/20 shadow-elegant">
+        <img
+          src={salonHero}
+          alt="Salon LB Prestige Appart"
+          className="w-full h-56 md:h-72 object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-noir via-noir/70 to-noir/10" />
+        <div className="absolute inset-0 flex items-center justify-between gap-6 px-6 md:px-10">
+          <div className="max-w-xl">
+            <div className="inline-flex items-center gap-2 text-[10px] tracking-[0.35em] uppercase text-gold mb-3">
+              <Sparkles className="w-3 h-3" /> L'art du séjour d'exception
+            </div>
+            <h1 className="font-display text-4xl md:text-5xl text-gold-gradient leading-tight mb-2">
+              Tableau de bord
+            </h1>
+            <p className="text-sm text-ivory/70 capitalize">{today} · Vue d'ensemble</p>
+          </div>
+          <Link to="/admin/reservations" className="hidden md:block shrink-0">
+            <Button size="lg" className="gradient-gold text-noir shadow-gold">
+              <Plus className="w-4 h-4 mr-2" /> Nouvelle réservation
+            </Button>
+          </Link>
+        </div>
+      </section>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
         {cards.map((c) => (
