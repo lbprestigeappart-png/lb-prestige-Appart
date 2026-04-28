@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_id_documents: {
+        Row: {
+          back_path: string | null
+          created_at: string
+          front_path: string | null
+          id: string
+          id_number: string | null
+          reservation_id: string
+          updated_at: string
+        }
+        Insert: {
+          back_path?: string | null
+          created_at?: string
+          front_path?: string | null
+          id?: string
+          id_number?: string | null
+          reservation_id: string
+          updated_at?: string
+        }
+        Update: {
+          back_path?: string | null
+          created_at?: string
+          front_path?: string | null
+          id?: string
+          id_number?: string | null
+          reservation_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           created_at: string
@@ -635,6 +665,15 @@ export type Database = {
       sign_rules: {
         Args: { _signed_name: string; _token: string }
         Returns: undefined
+      }
+      submit_client_id: {
+        Args: {
+          _back_path: string
+          _front_path: string
+          _id_number: string
+          _token: string
+        }
+        Returns: string
       }
       submit_client_review: {
         Args: { _comment: string; _rating: number; _token: string }
