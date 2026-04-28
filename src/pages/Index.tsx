@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Crown, ArrowRight, Shield, Sparkles } from "lucide-react";
+import { Crown, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Index() {
@@ -35,23 +35,9 @@ export default function Index() {
                 Accéder à l'admin <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
-            <a href="#client-link">
-              <Button size="lg" variant="outline" className="px-8">J'ai un lien client</Button>
-            </a>
           </div>
         </div>
       </main>
-
-      <section id="client-link" className="border-t border-border bg-noir-soft py-12 px-6">
-        <div className="max-w-3xl mx-auto text-center">
-          <Shield className="w-8 h-8 text-gold mx-auto mb-3" />
-          <h2 className="font-display text-2xl text-foreground mb-2">Espace client privé</h2>
-          <p className="text-sm text-muted-foreground">
-            Votre lien personnel a été envoyé via WhatsApp à la confirmation de votre réservation.<br />
-            Format : <code className="text-gold">/client/VOTRE-CODE</code>
-          </p>
-        </div>
-      </section>
 
       <footer className="px-6 py-6 text-center text-xs text-muted-foreground border-t border-border">
         © {new Date().getFullYear()} LB Prestige Appart — Conciergerie d'Exception

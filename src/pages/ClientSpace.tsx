@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import {
   Crown, Wifi, KeyRound, Tv, ChefHat, Car, BookOpen, Phone,
   MessageSquare, FileText, Star, MapPin, CalendarDays, Send, ExternalLink, Sparkles,
-  FileSignature, CheckCircle2,
+  FileSignature, CheckCircle2, IdCard, Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate, nightsBetween, formatDateTime } from "@/lib/format";
@@ -25,6 +25,10 @@ export default function ClientSpace() {
   const [comment, setComment] = useState("");
   const [signName, setSignName] = useState("");
   const [signing, setSigning] = useState(false);
+  const [idNumber, setIdNumber] = useState("");
+  const [frontFile, setFrontFile] = useState<File | null>(null);
+  const [backFile, setBackFile] = useState<File | null>(null);
+  const [uploadingId, setUploadingId] = useState(false);
 
   async function refresh() {
     if (!token) return;
@@ -94,7 +98,39 @@ export default function ClientSpace() {
     refresh();
   }
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Chargement…</div>;
+  async function uploadIdFile(file: File, kind: "front" | "back"): Promise<string | null> {
+    if (!token) return null;
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `${token}/${kind}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("id-documents").upload(path, file, {
+      upsert: true, contentType: file.type || "image/jpeg",
+    });
+    if (error) { toast.error(`Upload ${kind}: ${error.message}`); return null; }
+    return path;
+  }
+
+  async function submitId() {
+    if (!token) return;
+    if (idNumber.trim().length < 3) return toast.error("Numéro de CNI requis.");
+    if (!frontFile && !backFile && !data?.id_document) return toast.error("Veuillez joindre au moins une photo.");
+    setUploadingId(true);
+    try {
+      let frontPath: string | null = data?.id_document?.front_path ?? null;
+      let backPath: string | null = data?.id_document?.back_path ?? null;
+      if (frontFile) frontPath = await uploadIdFile(frontFile, "front");
+      if (backFile) backPath = await uploadIdFile(backFile, "back");
+      const { error } = await supabase.rpc("submit_client_id", {
+        _token: token, _id_number: idNumber.trim(),
+        _front_path: frontPath, _back_path: backPath,
+      });
+      if (error) return toast.error(error.message);
+      toast.success("Pièce d'identité transmise. Merci !");
+      setFrontFile(null); setBackFile(null);
+      refresh();
+    } finally {
+      setUploadingId(false);
+    }
+  }
 
   if (!data) return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
@@ -256,6 +292,45 @@ export default function ClientSpace() {
                 </div>
               )}
             </InfoCard>
+
+            <InfoCard icon={IdCard} title="Pièce d'identité (CNI)">
+              {data.id_document ? (
+                <div className="p-3 rounded-md bg-gold/10 border border-gold/30 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-gold shrink-0" />
+                    <div className="text-xs font-medium text-foreground">Pièce d'identité reçue</div>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    N° : <span className="font-mono text-foreground">{data.id_document.id_number}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Transmise le {formatDateTime(data.id_document.submitted_at)}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground italic pt-1">
+                    Vous pouvez renvoyer une nouvelle photo si nécessaire :
+                  </p>
+                  <IdUploadFields
+                    idNumber={idNumber} setIdNumber={setIdNumber}
+                    setFrontFile={setFrontFile} setBackFile={setBackFile}
+                    onSubmit={submitId} uploading={uploadingId}
+                    frontFile={frontFile} backFile={backFile}
+                  />
+                </div>
+              ) : (
+                <div className="p-3 rounded-md bg-secondary/50 border border-border space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-medium">
+                    <Upload className="w-3 h-3 text-gold" />
+                    Envoyez votre numéro CNI et une photo recto/verso
+                  </div>
+                  <IdUploadFields
+                    idNumber={idNumber} setIdNumber={setIdNumber}
+                    setFrontFile={setFrontFile} setBackFile={setBackFile}
+                    onSubmit={submitId} uploading={uploadingId}
+                    frontFile={frontFile} backFile={backFile}
+                  />
+                </div>
+              )}
+            </InfoCard>
             <InfoCard icon={Phone} title="Contacts utiles">
               {settings?.useful_contacts?.phone && <KeyValue label="Téléphone" value={settings.useful_contacts.phone} />}
               {settings?.useful_contacts?.email && <KeyValue label="E-mail" value={settings.useful_contacts.email} />}
@@ -355,3 +430,31 @@ function KeyValue({ label, value }: { label: string; value?: string }) {
     </div>
   );
 }
+
+function IdUploadFields({ idNumber, setIdNumber, setFrontFile, setBackFile, onSubmit, uploading, frontFile, backFile }: any) {
+  return (
+    <div className="space-y-2">
+      <Input
+        placeholder="Numéro de la CNI"
+        value={idNumber}
+        onChange={(e) => setIdNumber(e.target.value)}
+      />
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Recto</Label>
+          <Input type="file" accept="image/*" onChange={(e) => setFrontFile(e.target.files?.[0] ?? null)} />
+          {frontFile && <div className="text-[10px] text-muted-foreground mt-1 truncate">{frontFile.name}</div>}
+        </div>
+        <div>
+          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Verso</Label>
+          <Input type="file" accept="image/*" onChange={(e) => setBackFile(e.target.files?.[0] ?? null)} />
+          {backFile && <div className="text-[10px] text-muted-foreground mt-1 truncate">{backFile.name}</div>}
+        </div>
+      </div>
+      <Button onClick={onSubmit} disabled={uploading} className="w-full gradient-gold text-noir text-xs">
+        {uploading ? "Envoi…" : "Envoyer ma pièce d'identité"}
+      </Button>
+    </div>
+  );
+}
+
