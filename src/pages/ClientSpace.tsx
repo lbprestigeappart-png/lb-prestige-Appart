@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import {
   Crown, Wifi, KeyRound, Tv, ChefHat, Car, BookOpen, Phone,
   MessageSquare, FileText, Star, MapPin, CalendarDays, Send, ExternalLink, Sparkles,
-  FileSignature, CheckCircle2,
+  FileSignature, CheckCircle2, IdCard, Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate, nightsBetween, formatDateTime } from "@/lib/format";
@@ -25,6 +25,10 @@ export default function ClientSpace() {
   const [comment, setComment] = useState("");
   const [signName, setSignName] = useState("");
   const [signing, setSigning] = useState(false);
+  const [idNumber, setIdNumber] = useState("");
+  const [frontFile, setFrontFile] = useState<File | null>(null);
+  const [backFile, setBackFile] = useState<File | null>(null);
+  const [uploadingId, setUploadingId] = useState(false);
 
   async function refresh() {
     if (!token) return;
