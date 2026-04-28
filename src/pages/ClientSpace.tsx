@@ -331,6 +331,7 @@ export default function ClientSpace() {
                 </div>
               )}
             </InfoCard>
+            <InfoCard icon={Phone} title="Contacts utiles">
               {settings?.useful_contacts?.phone && <KeyValue label="Téléphone" value={settings.useful_contacts.phone} />}
               {settings?.useful_contacts?.email && <KeyValue label="E-mail" value={settings.useful_contacts.email} />}
               {settings?.useful_contacts?.hours && <KeyValue label="Horaires" value={settings.useful_contacts.hours} />}
