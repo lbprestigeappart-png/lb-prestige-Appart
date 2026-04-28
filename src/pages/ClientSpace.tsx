@@ -98,7 +98,39 @@ export default function ClientSpace() {
     refresh();
   }
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Chargement…</div>;
+  async function uploadIdFile(file: File, kind: "front" | "back"): Promise<string | null> {
+    if (!token) return null;
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `${token}/${kind}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("id-documents").upload(path, file, {
+      upsert: true, contentType: file.type || "image/jpeg",
+    });
+    if (error) { toast.error(`Upload ${kind}: ${error.message}`); return null; }
+    return path;
+  }
+
+  async function submitId() {
+    if (!token) return;
+    if (idNumber.trim().length < 3) return toast.error("Numéro de CNI requis.");
+    if (!frontFile && !backFile && !data?.id_document) return toast.error("Veuillez joindre au moins une photo.");
+    setUploadingId(true);
+    try {
+      let frontPath: string | null = data?.id_document?.front_path ?? null;
+      let backPath: string | null = data?.id_document?.back_path ?? null;
+      if (frontFile) frontPath = await uploadIdFile(frontFile, "front");
+      if (backFile) backPath = await uploadIdFile(backFile, "back");
+      const { error } = await supabase.rpc("submit_client_id", {
+        _token: token, _id_number: idNumber.trim(),
+        _front_path: frontPath, _back_path: backPath,
+      });
+      if (error) return toast.error(error.message);
+      toast.success("Pièce d'identité transmise. Merci !");
+      setFrontFile(null); setBackFile(null);
+      refresh();
+    } finally {
+      setUploadingId(false);
+    }
+  }
 
   if (!data) return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
