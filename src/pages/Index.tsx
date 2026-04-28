@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Crown, ArrowRight, Shield, Sparkles } from "lucide-react";
+import { Crown, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Index() {
