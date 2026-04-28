@@ -199,17 +199,71 @@ export default function WhatsappPage() {
             </div>
 
             {previewContent && (
-              <div className="p-3 rounded-md bg-secondary/50 border border-border">
-                <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Eye className="w-3 h-3 text-gold" />
-                    <span className="text-xs font-medium text-muted-foreground">Aperçu</span>
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Aperçu — tel que le client le verra sur WhatsApp
+                    </span>
                   </div>
                   <Button variant="ghost" size="sm" onClick={() => copyToClipboard(previewContent, "Message copié")} className="h-6 text-[11px]">
                     <Copy className="w-3 h-3 mr-1" /> Copier
                   </Button>
                 </div>
-                <pre className="text-xs whitespace-pre-wrap font-sans text-foreground">{previewContent}</pre>
+
+                {/* Fake WhatsApp chat frame */}
+                <div className="rounded-lg overflow-hidden border border-border bg-[#0b141a]">
+                  {/* Header */}
+                  <div className="flex items-center gap-2 px-3 py-2 bg-[#202c33]">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-gold to-amber-600 flex items-center justify-center text-noir text-[11px] font-bold">
+                      {(selectedRes?.clients?.first_name?.[0] ?? "C").toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs text-white truncate">
+                        {selectedRes?.clients?.first_name ?? "Client"} {selectedRes?.clients?.last_name ?? ""}
+                      </div>
+                      <div className="text-[10px] text-white/50 truncate">{previewPhone || "—"}</div>
+                    </div>
+                    <span className="text-[10px] text-green-400">en ligne</span>
+                  </div>
+
+                  {/* Conversation background */}
+                  <div
+                    className="p-3 min-h-[140px]"
+                    style={{
+                      backgroundColor: "#0b141a",
+                      backgroundImage:
+                        "radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)",
+                      backgroundSize: "14px 14px",
+                    }}
+                  >
+                    {/* Incoming bubble (from admin → client perspective) */}
+                    <div className="max-w-[85%] ml-auto bg-[#005c4b] text-white rounded-lg rounded-tr-none px-3 py-2 shadow">
+                      <pre className="text-[12.5px] whitespace-pre-wrap break-words font-sans leading-relaxed">
+{renderPreviewWithLinks(previewContent)}
+                      </pre>
+                      <div className="flex items-center justify-end gap-1 mt-1">
+                        <span className="text-[10px] text-white/60">
+                          {new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                        <span className="text-[10px] text-sky-300">✓✓</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Variable check */}
+                <div className="flex flex-wrap gap-1.5 text-[10px]">
+                  <VarBadge label="prenom" value={selectedRes?.clients?.first_name} />
+                  <VarBadge label="lien" value={selectedRes ? buildClientLink(selectedRes.client_token) : undefined} />
+                  <VarBadge label="code" value={selectedRes?.reservation_code} />
+                </div>
+                {/\{(\w+)\}/.test(previewContent) && (
+                  <p className="text-[11px] text-yellow-400">
+                    ⚠ Certaines variables ne sont pas remplacées — vérifiez le modèle.
+                  </p>
+                )}
               </div>
             )}
 
