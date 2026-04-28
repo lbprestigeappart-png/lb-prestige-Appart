@@ -292,7 +292,45 @@ export default function ClientSpace() {
                 </div>
               )}
             </InfoCard>
-            <InfoCard icon={Phone} title="Contacts utiles">
+
+            <InfoCard icon={IdCard} title="Pièce d'identité (CNI)">
+              {data.id_document ? (
+                <div className="p-3 rounded-md bg-gold/10 border border-gold/30 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-gold shrink-0" />
+                    <div className="text-xs font-medium text-foreground">Pièce d'identité reçue</div>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    N° : <span className="font-mono text-foreground">{data.id_document.id_number}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Transmise le {formatDateTime(data.id_document.submitted_at)}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground italic pt-1">
+                    Vous pouvez renvoyer une nouvelle photo si nécessaire :
+                  </p>
+                  <IdUploadFields
+                    idNumber={idNumber} setIdNumber={setIdNumber}
+                    setFrontFile={setFrontFile} setBackFile={setBackFile}
+                    onSubmit={submitId} uploading={uploadingId}
+                    frontFile={frontFile} backFile={backFile}
+                  />
+                </div>
+              ) : (
+                <div className="p-3 rounded-md bg-secondary/50 border border-border space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-medium">
+                    <Upload className="w-3 h-3 text-gold" />
+                    Envoyez votre numéro CNI et une photo recto/verso
+                  </div>
+                  <IdUploadFields
+                    idNumber={idNumber} setIdNumber={setIdNumber}
+                    setFrontFile={setFrontFile} setBackFile={setBackFile}
+                    onSubmit={submitId} uploading={uploadingId}
+                    frontFile={frontFile} backFile={backFile}
+                  />
+                </div>
+              )}
+            </InfoCard>
               {settings?.useful_contacts?.phone && <KeyValue label="Téléphone" value={settings.useful_contacts.phone} />}
               {settings?.useful_contacts?.email && <KeyValue label="E-mail" value={settings.useful_contacts.email} />}
               {settings?.useful_contacts?.hours && <KeyValue label="Horaires" value={settings.useful_contacts.hours} />}
