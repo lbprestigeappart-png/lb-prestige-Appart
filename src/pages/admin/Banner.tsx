@@ -36,9 +36,8 @@ export default function BannerPage() {
     const { error } = await supabase.storage.from("banners").upload(path, file);
     if (error) return toast.error(error.message);
     const { data } = supabase.storage.from("banners").getPublicUrl(path);
-    // Add cache-buster to ensure clients see the new image immediately
-    const cacheBustedUrl = `${data.publicUrl}?t=${Date.now()}`;
-    setProperty({ ...property, banner_url: cacheBustedUrl });
+    // Persist clean public URL — uniqueness comes from the timestamped path
+    setProperty({ ...property, banner_url: data.publicUrl });
     toast.success("Image téléversée — n'oubliez pas d'enregistrer");
   }
 

@@ -34,7 +34,10 @@ export default function ClientSpace() {
     if (!token) return;
     const { data: res } = await supabase.rpc("get_client_space", { _token: token });
     const base: any = res;
-    if (!base) return;
+    if (!base || base.status === "invalid" || base.status === "expired") {
+      setData(base ?? { status: "invalid" });
+      return;
+    }
     const { data: r } = await supabase
       .from("reservations").select("rules_signed_at, rules_signed_name, client_link_opened_at")
       .eq("client_token", token).maybeSingle();
@@ -132,12 +135,42 @@ export default function ClientSpace() {
     }
   }
 
-  if (!data) return (
+  if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <Card className="p-8 max-w-md text-center">
+      <p className="text-sm text-muted-foreground">Chargement…</p>
+    </div>
+  );
+
+  if (!data || data.status === "invalid") return (
+    <div className="min-h-screen flex items-center justify-center bg-background p-6">
+      <Card className="p-8 max-w-md text-center bg-card border-border">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-destructive/10 mb-4 mx-auto">
+          <Crown className="w-6 h-6 text-destructive" />
+        </div>
         <h1 className="font-display text-2xl mb-2">Lien invalide</h1>
-        <p className="text-sm text-muted-foreground mb-4">Ce lien client n'existe pas ou a expiré.</p>
+        <p className="text-sm text-muted-foreground mb-4">
+          Ce lien client n'existe pas. Vérifiez l'adresse reçue ou contactez la conciergerie.
+        </p>
         <Link to="/"><Button variant="outline">Retour à l'accueil</Button></Link>
+      </Card>
+    </div>
+  );
+
+  if (data.status === "expired") return (
+    <div className="min-h-screen flex items-center justify-center bg-background p-6">
+      <Card className="p-10 max-w-lg text-center bg-card border-gold/30 shadow-elegant">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full gradient-gold mb-5 mx-auto shadow-gold">
+          <Crown className="w-7 h-7 text-noir" />
+        </div>
+        <h1 className="font-display text-3xl text-gold-gradient mb-3">Votre accès a expiré</h1>
+        <p className="text-sm text-muted-foreground leading-relaxed mb-2">
+          {data.client?.first_name ? `Cher(e) ${data.client.first_name},` : ""}
+        </p>
+        <p className="text-sm text-foreground leading-relaxed mb-6">
+          Merci pour votre séjour chez <span className="text-gold">{data.property?.name ?? "LB Prestige Appart"}</span>.
+          <br />À très bientôt.
+        </p>
+        <Link to="/"><Button variant="outline" className="border-gold/40">Retour à l'accueil</Button></Link>
       </Card>
     </div>
   );
