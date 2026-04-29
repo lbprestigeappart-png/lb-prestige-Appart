@@ -20,6 +20,8 @@ import Reviews from "./pages/admin/Reviews.tsx";
 import Payments from "./pages/admin/Payments.tsx";
 import Access from "./pages/admin/Access.tsx";
 import Wifi from "./pages/admin/Wifi.tsx";
+import Kitchen from "./pages/admin/Kitchen.tsx";
+import Parking from "./pages/admin/Parking.tsx";
 import Rules from "./pages/admin/Rules.tsx";
 import Contacts from "./pages/admin/Contacts.tsx";
 import Documents from "./pages/admin/Documents.tsx";
@@ -52,6 +54,8 @@ const App = () => (
               <Route path="payments" element={<Payments />} />
               <Route path="access" element={<Access />} />
               <Route path="wifi" element={<Wifi />} />
+              <Route path="kitchen" element={<Kitchen />} />
+              <Route path="parking" element={<Parking />} />
               <Route path="rules" element={<Rules />} />
               <Route path="contacts" element={<Contacts />} />
               <Route path="documents" element={<Documents />} />
