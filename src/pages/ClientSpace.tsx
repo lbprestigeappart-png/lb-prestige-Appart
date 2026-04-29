@@ -142,7 +142,8 @@ export default function ClientSpace() {
     </div>
   );
 
-  const { reservation, client, property, settings, documents } = data;
+  const { reservation, client, property, settings } = data;
+  const documents: any[] = Array.isArray(data.documents) ? data.documents : [];
   const wa = (property?.whatsapp ?? "").replace(/\D/g, "");
 
   return (
@@ -365,18 +366,27 @@ export default function ClientSpace() {
         {tab === "docs" && (
           <div className="grid gap-3">
             {documents.length === 0 && <Card className="p-8 text-center text-sm text-muted-foreground">Aucun document.</Card>}
-            {documents.map((d: any) => (
-              <a key={d.id} href={d.external_url ?? "#"} target="_blank" rel="noreferrer">
-                <Card className="p-4 bg-card border-border hover:border-gold/40 transition flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-md gradient-gold flex items-center justify-center"><FileText className="w-5 h-5 text-noir" /></div>
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">{d.title}</div>
-                    <div className="text-xs text-muted-foreground">{d.file_type} {d.file_size && `• ${d.file_size}`}</div>
-                  </div>
-                  <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                </Card>
-              </a>
-            ))}
+            {documents.map((d: any) => {
+              const href = d.external_url && d.external_url !== "#"
+                ? d.external_url
+                : (d.storage_path
+                    ? supabase.storage.from("documents").getPublicUrl(d.storage_path).data.publicUrl
+                    : null);
+              const Wrapper: any = href ? "a" : "div";
+              const wrapperProps = href ? { href, target: "_blank", rel: "noreferrer" } : {};
+              return (
+                <Wrapper key={d.id} {...wrapperProps}>
+                  <Card className={`p-4 bg-card border-border transition flex items-center gap-3 ${href ? "hover:border-gold/40" : "opacity-60"}`}>
+                    <div className="w-10 h-10 rounded-md gradient-gold flex items-center justify-center"><FileText className="w-5 h-5 text-noir" /></div>
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{d.title}</div>
+                      <div className="text-xs text-muted-foreground">{d.file_type} {d.file_size && `• ${d.file_size}`}</div>
+                    </div>
+                    {href && <ExternalLink className="w-4 h-4 text-muted-foreground" />}
+                  </Card>
+                </Wrapper>
+              );
+            })}
           </div>
         )}
 
