@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   LayoutDashboard, Users, CalendarRange, MessageSquare, Star, CreditCard,
   Settings, FileText, Send, Megaphone, KeyRound, Wifi, BookOpen, Bell,
-  LogOut, Crown, Image, Phone
+  LogOut, Crown, Image, Phone, ChefHat, Car
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -20,6 +20,8 @@ const nav = [
   { to: "/admin/payments", icon: CreditCard, label: "Paiements" },
   { to: "/admin/access", icon: KeyRound, label: "Codes & accès" },
   { to: "/admin/wifi", icon: Wifi, label: "Wi-Fi & Netflix" },
+  { to: "/admin/kitchen", icon: ChefHat, label: "Cuisine" },
+  { to: "/admin/parking", icon: Car, label: "Parking" },
   { to: "/admin/rules", icon: BookOpen, label: "Règlement" },
   { to: "/admin/contacts", icon: Phone, label: "Contacts utiles" },
   { to: "/admin/documents", icon: FileText, label: "Documents" },
