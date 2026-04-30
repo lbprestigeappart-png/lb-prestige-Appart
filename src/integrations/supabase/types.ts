@@ -691,6 +691,7 @@ export type Database = {
         | "review"
         | "payment"
         | "system"
+        | "rules_signed"
       payment_status: "pending" | "partial" | "paid" | "refunded"
       reservation_status:
         | "pending"
@@ -848,6 +849,7 @@ export const Constants = {
         "review",
         "payment",
         "system",
+        "rules_signed",
       ],
       payment_status: ["pending", "partial", "paid", "refunded"],
       reservation_status: [
