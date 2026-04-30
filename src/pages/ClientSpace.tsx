@@ -180,7 +180,7 @@ export default function ClientSpace() {
   const wa = (property?.whatsapp ?? "").replace(/\D/g, "");
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="client-theme min-h-screen bg-background text-foreground">
       {/* Banner */}
       <header className="relative overflow-hidden">
         {property?.banner_url ? (
