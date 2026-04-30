@@ -34,6 +34,7 @@ export default function ClientSpace() {
     if (!token) return;
     const { data: res } = await supabase.rpc("get_client_space", { _token: token });
     const base: any = res;
+    console.log("[ClientSpace] banner_url depuis Supabase:", base?.property?.banner_url);
     if (!base || base.status === "invalid" || base.status === "expired") {
       setData(base ?? { status: "invalid" });
       return;
