@@ -136,28 +136,31 @@ export default function ClientSpace() {
   }
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-6">
+    <div className="client-theme min-h-screen flex items-center justify-center bg-background p-6">
       <p className="text-sm text-muted-foreground">Chargement…</p>
     </div>
   );
 
   if (!data || data.status === "invalid") return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <Card className="p-8 max-w-md text-center bg-card border-border">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-destructive/10 mb-4 mx-auto">
-          <Crown className="w-6 h-6 text-destructive" />
+    <div className="client-theme min-h-screen flex items-center justify-center bg-background p-6">
+      <Card className="p-10 max-w-md text-center bg-card border-gold/30 shadow-elegant">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-destructive/10 mb-5 mx-auto">
+          <Crown className="w-7 h-7 text-destructive" />
         </div>
-        <h1 className="font-display text-2xl mb-2">Lien invalide</h1>
-        <p className="text-sm text-muted-foreground mb-4">
-          Ce lien client n'existe pas. Vérifiez l'adresse reçue ou contactez la conciergerie.
+        <h1 className="font-display text-3xl text-gold-gradient mb-3">Lien invalide</h1>
+        <p className="text-sm text-muted-foreground mb-2">
+          Ce lien client est introuvable.
         </p>
-        <Link to="/"><Button variant="outline">Retour à l'accueil</Button></Link>
+        <p className="text-sm text-muted-foreground mb-6">
+          Vérifiez l'adresse reçue ou contactez la conciergerie.
+        </p>
+        <Link to="/"><Button variant="outline" className="border-gold/40">Retour à l'accueil</Button></Link>
       </Card>
     </div>
   );
 
   if (data.status === "expired") return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-6">
+    <div className="client-theme min-h-screen flex items-center justify-center bg-background p-6">
       <Card className="p-10 max-w-lg text-center bg-card border-gold/30 shadow-elegant">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full gradient-gold mb-5 mx-auto shadow-gold">
           <Crown className="w-7 h-7 text-noir" />
@@ -180,13 +183,13 @@ export default function ClientSpace() {
   const wa = (property?.whatsapp ?? "").replace(/\D/g, "");
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="client-theme min-h-screen bg-background text-foreground">
       {/* Banner */}
       <header className="relative overflow-hidden">
         {property?.banner_url ? (
           <img
             key={property.banner_url}
-            src={property.banner_url}
+            src={`${property.banner_url}${property.banner_url.includes("?") ? "&" : "?"}t=${Date.now()}`}
             alt={property?.banner_title ?? property?.name ?? "Bannière"}
             className="w-full h-64 md:h-80 object-cover"
           />

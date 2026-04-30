@@ -86,9 +86,39 @@
     --input: 0 0% 14%;
     --ring: 38 60% 52%;
   }
-}
 
-@layer base {
+  /* Client space — Noir & Or premium theme */
+  .client-theme {
+    --background: 0 0% 4%;            /* #0a0a0a */
+    --foreground: 36 33% 93%;         /* ivoire #F5F0E8 */
+    --card: 0 0% 10%;                 /* #1a1a1a */
+    --card-foreground: 36 33% 93%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 36 33% 93%;
+    --primary: 43 86% 46%;            /* or #D4A017 */
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 36 33% 93%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 36 18% 70%;
+    --accent: 43 86% 46%;
+    --accent-foreground: 0 0% 4%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 36 33% 93%;
+    --border: 43 86% 46%;             /* or #D4A017 */
+    --input: 0 0% 14%;
+    --ring: 43 86% 46%;
+
+    --gold: 43 86% 46%;
+    --gold-light: 43 86% 60%;
+    --gold-dark: 43 70% 36%;
+    --noir: 0 0% 4%;
+    --noir-soft: 0 0% 10%;
+    --noir-muted: 0 0% 16%;
+  }
+  /* Soften default card border so it does not feel too heavy everywhere */
+  .client-theme .border-border { border-color: hsl(43 86% 46% / 0.25); }
+
   * { @apply border-border; }
   body {
     @apply bg-background text-foreground antialiased;
@@ -99,6 +129,7 @@
     letter-spacing: -0.01em;
   }
 }
+
 
 @layer utilities {
   .text-gold { color: hsl(var(--gold)); }
