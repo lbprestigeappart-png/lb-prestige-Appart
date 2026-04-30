@@ -186,7 +186,7 @@ export default function ClientSpace() {
         {property?.banner_url ? (
           <img
             key={property.banner_url}
-            src={property.banner_url}
+            src={`${property.banner_url}${property.banner_url.includes("?") ? "&" : "?"}t=${Date.now()}`}
             alt={property?.banner_title ?? property?.name ?? "Bannière"}
             className="w-full h-64 md:h-80 object-cover"
           />
