@@ -376,6 +376,62 @@ export default function ReservationsPage() {
         })}
         {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-12">Aucune réservation.</p>}
       </div>
+
+      {/* ID document viewer */}
+      <Dialog open={idDocOpen.open} onOpenChange={(v) => setIdDocOpen({ open: v })}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl text-gold-gradient flex items-center gap-2">
+              <IdCard className="w-5 h-5" /> Pièces d'identité {idDocOpen.clientName && `— ${idDocOpen.clientName}`}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {idDocOpen.data?.id_number && (
+              <div className="p-3 rounded-lg border border-border bg-muted/30">
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">N° CNI</div>
+                <div className="font-mono text-lg text-foreground">{idDocOpen.data.id_number}</div>
+              </div>
+            )}
+            {!idDocOpen.data?.front_url && !idDocOpen.data?.back_url && (
+              <p className="text-sm text-muted-foreground">Aucune photo n'a été envoyée par le client.</p>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {idDocOpen.data?.front_url && (
+                <div>
+                  <div className="text-xs text-muted-foreground mb-1">Recto</div>
+                  <button
+                    type="button"
+                    onClick={() => setIdViewer({ open: true, url: idDocOpen.data?.front_url, title: "Recto" })}
+                    className="block w-full overflow-hidden rounded-lg border border-border hover:border-gold/50 transition"
+                  >
+                    <img src={idDocOpen.data.front_url} alt="Recto pièce d'identité" className="w-full h-48 object-cover" />
+                  </button>
+                </div>
+              )}
+              {idDocOpen.data?.back_url && (
+                <div>
+                  <div className="text-xs text-muted-foreground mb-1">Verso</div>
+                  <button
+                    type="button"
+                    onClick={() => setIdViewer({ open: true, url: idDocOpen.data?.back_url, title: "Verso" })}
+                    className="block w-full overflow-hidden rounded-lg border border-border hover:border-gold/50 transition"
+                  >
+                    <img src={idDocOpen.data.back_url} alt="Verso pièce d'identité" className="w-full h-48 object-cover" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Lightbox */}
+      <Dialog open={idViewer.open} onOpenChange={(v) => setIdViewer({ open: v })}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader><DialogTitle>{idViewer.title}</DialogTitle></DialogHeader>
+          {idViewer.url && <img src={idViewer.url} alt={idViewer.title ?? "Document"} className="w-full max-h-[80vh] object-contain" />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
