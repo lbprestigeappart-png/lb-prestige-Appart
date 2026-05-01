@@ -83,24 +83,69 @@ export default function ReservationsPage() {
     setOpen(true);
   }
 
+  async function syncPaymentStatus(reservationId: string, totalPrice: number, target: "unpaid" | "partial" | "paid") {
+    // Strategy: clear existing payments for this reservation, then insert one matching the target state.
+    await supabase.from("payments").delete().eq("reservation_id", reservationId);
+    if (target === "paid" && totalPrice > 0) {
+      await supabase.from("payments").insert({
+        reservation_id: reservationId,
+        amount: totalPrice,
+        currency: "FCFA",
+        status: "paid",
+        payment_type: "full",
+        paid_at: new Date().toISOString(),
+        reference: "Marqué payé manuellement",
+      } as any);
+    } else if (target === "partial" && totalPrice > 0) {
+      await supabase.from("payments").insert({
+        reservation_id: reservationId,
+        amount: Math.round(totalPrice / 2),
+        currency: "FCFA",
+        status: "paid",
+        payment_type: "deposit",
+        paid_at: new Date().toISOString(),
+        reference: "Acompte (partiel)",
+      } as any);
+    }
+  }
+
   async function save() {
     if (!form.client_id || !form.check_in || !form.check_out) return toast.error("Champs manquants");
 
+    const { payment_status, ...resvFields } = form;
+
     if (editingId) {
-      const { error } = await supabase.from("reservations").update(form as any).eq("id", editingId);
+      const { error } = await supabase.from("reservations").update(resvFields as any).eq("id", editingId);
       if (error) return toast.error(error.message);
+      const sum = summaries[editingId];
+      const currentLabel = sum?.payment_status_label ?? "unpaid";
+      const currentMapped = currentLabel === "settled" ? "paid" : currentLabel === "advance" ? "partial" : "unpaid";
+      if (currentMapped !== payment_status) {
+        await syncPaymentStatus(editingId, resvFields.total_price, payment_status);
+      }
       toast.success("Réservation mise à jour");
     } else {
-      const { data, error } = await supabase.from("reservations").insert(form as any).select("*, clients(first_name,phone)").single();
+      const { data, error } = await supabase.from("reservations").insert(resvFields as any).select("*, clients(first_name,phone)").single();
       if (error) return toast.error(error.message);
       toast.success("Réservation créée");
       if (data) {
+        if (payment_status !== "unpaid") {
+          await syncPaymentStatus(data.id, resvFields.total_price, payment_status);
+        }
         await supabase.functions.invoke("run-automations", { body: { reservation_id: data.id, trigger: "on_create" } });
       }
     }
     setOpen(false);
     setEditingId(null);
     setForm(EMPTY_FORM);
+    load();
+  }
+
+  async function markAsPaid(r: any) {
+    const total = Number(r.total_price ?? 0);
+    if (total <= 0) return toast.error("Définissez d'abord le prix total");
+    await syncPaymentStatus(r.id, total, "paid");
+    toast.success("Réservation marquée comme payée");
     load();
   }
 
