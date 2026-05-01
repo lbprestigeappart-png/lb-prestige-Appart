@@ -22,11 +22,13 @@ type ReservationForm = {
   status: string;
   internal_notes: string;
   total_price: number;
+  payment_status: "unpaid" | "partial" | "paid";
 };
 
 const EMPTY_FORM: ReservationForm = {
   client_id: "", check_in: "", check_out: "", guests: 2,
   suite_type: "Suite Premium", status: "confirmed", internal_notes: "", total_price: 0,
+  payment_status: "unpaid",
 };
 
 export default function ReservationsPage() {
