@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Eye, Copy, CheckCircle2, FileSignature, Pencil } from "lucide-react";
+import { Plus, Search, Eye, Copy, CheckCircle2, FileSignature, Pencil, IdCard } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate, formatDateTime, nightsBetween, statusLabel, buildClientLink, formatFCFA } from "@/lib/format";
 import SendWhatsappButton from "@/components/admin/SendWhatsappButton";
@@ -22,11 +22,13 @@ type ReservationForm = {
   status: string;
   internal_notes: string;
   total_price: number;
+  payment_status: "unpaid" | "partial" | "paid";
 };
 
 const EMPTY_FORM: ReservationForm = {
   client_id: "", check_in: "", check_out: "", guests: 2,
   suite_type: "Suite Premium", status: "confirmed", internal_notes: "", total_price: 0,
+  payment_status: "unpaid",
 };
 
 export default function ReservationsPage() {
@@ -38,6 +40,9 @@ export default function ReservationsPage() {
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ReservationForm>(EMPTY_FORM);
+  const [idDocs, setIdDocs] = useState<Record<string, { id_number?: string; front_url?: string; back_url?: string }>>({});
+  const [idViewer, setIdViewer] = useState<{ open: boolean; url?: string; title?: string }>({ open: false });
+  const [idDocOpen, setIdDocOpen] = useState<{ open: boolean; data?: { id_number?: string; front_url?: string; back_url?: string }; clientName?: string }>({ open: false });
 
   async function load() {
     const [resv, cls] = await Promise.all([
@@ -52,6 +57,23 @@ export default function ReservationsPage() {
     const map: Record<string, any> = {};
     (sums ?? []).forEach((s: any) => { map[s.reservation_id] = s; });
     setSummaries(map);
+
+    // Load ID documents and produce signed URLs
+    const { data: docs } = await supabase.from("client_id_documents").select("reservation_id, id_number, front_path, back_path");
+    const docsMap: Record<string, { id_number?: string; front_url?: string; back_url?: string }> = {};
+    for (const d of docs ?? []) {
+      const entry: { id_number?: string; front_url?: string; back_url?: string } = { id_number: d.id_number ?? undefined };
+      if (d.front_path) {
+        const { data: s } = await supabase.storage.from("id-documents").createSignedUrl(d.front_path, 3600);
+        entry.front_url = s?.signedUrl;
+      }
+      if (d.back_path) {
+        const { data: s } = await supabase.storage.from("id-documents").createSignedUrl(d.back_path, 3600);
+        entry.back_url = s?.signedUrl;
+      }
+      docsMap[d.reservation_id] = entry;
+    }
+    setIdDocs(docsMap);
   }
   useEffect(() => { load(); }, []);
 
@@ -63,6 +85,10 @@ export default function ReservationsPage() {
 
   function openEdit(r: any) {
     setEditingId(r.id);
+    const sum = summaries[r.id];
+    const status = (sum?.payment_status_label ?? "unpaid") as string;
+    const payStatus: "unpaid" | "partial" | "paid" =
+      status === "settled" ? "paid" : status === "advance" ? "partial" : "unpaid";
     setForm({
       client_id: r.client_id,
       check_in: r.check_in,
@@ -72,28 +98,74 @@ export default function ReservationsPage() {
       status: r.status,
       internal_notes: r.internal_notes ?? "",
       total_price: Number(r.total_price ?? 0),
+      payment_status: payStatus,
     });
     setOpen(true);
+  }
+
+  async function syncPaymentStatus(reservationId: string, totalPrice: number, target: "unpaid" | "partial" | "paid") {
+    // Strategy: clear existing payments for this reservation, then insert one matching the target state.
+    await supabase.from("payments").delete().eq("reservation_id", reservationId);
+    if (target === "paid" && totalPrice > 0) {
+      await supabase.from("payments").insert({
+        reservation_id: reservationId,
+        amount: totalPrice,
+        currency: "FCFA",
+        status: "paid",
+        payment_type: "full",
+        paid_at: new Date().toISOString(),
+        reference: "Marqué payé manuellement",
+      } as any);
+    } else if (target === "partial" && totalPrice > 0) {
+      await supabase.from("payments").insert({
+        reservation_id: reservationId,
+        amount: Math.round(totalPrice / 2),
+        currency: "FCFA",
+        status: "paid",
+        payment_type: "deposit",
+        paid_at: new Date().toISOString(),
+        reference: "Acompte (partiel)",
+      } as any);
+    }
   }
 
   async function save() {
     if (!form.client_id || !form.check_in || !form.check_out) return toast.error("Champs manquants");
 
+    const { payment_status, ...resvFields } = form;
+
     if (editingId) {
-      const { error } = await supabase.from("reservations").update(form as any).eq("id", editingId);
+      const { error } = await supabase.from("reservations").update(resvFields as any).eq("id", editingId);
       if (error) return toast.error(error.message);
+      const sum = summaries[editingId];
+      const currentLabel = sum?.payment_status_label ?? "unpaid";
+      const currentMapped = currentLabel === "settled" ? "paid" : currentLabel === "advance" ? "partial" : "unpaid";
+      if (currentMapped !== payment_status) {
+        await syncPaymentStatus(editingId, resvFields.total_price, payment_status);
+      }
       toast.success("Réservation mise à jour");
     } else {
-      const { data, error } = await supabase.from("reservations").insert(form as any).select("*, clients(first_name,phone)").single();
+      const { data, error } = await supabase.from("reservations").insert(resvFields as any).select("*, clients(first_name,phone)").single();
       if (error) return toast.error(error.message);
       toast.success("Réservation créée");
       if (data) {
+        if (payment_status !== "unpaid") {
+          await syncPaymentStatus(data.id, resvFields.total_price, payment_status);
+        }
         await supabase.functions.invoke("run-automations", { body: { reservation_id: data.id, trigger: "on_create" } });
       }
     }
     setOpen(false);
     setEditingId(null);
     setForm(EMPTY_FORM);
+    load();
+  }
+
+  async function markAsPaid(r: any) {
+    const total = Number(r.total_price ?? 0);
+    if (total <= 0) return toast.error("Définissez d'abord le prix total");
+    await syncPaymentStatus(r.id, total, "paid");
+    toast.success("Réservation marquée comme payée");
     load();
   }
 
@@ -186,6 +258,20 @@ export default function ReservationsPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label>Statut de paiement</Label>
+              <Select value={form.payment_status} onValueChange={(v) => setForm({ ...form, payment_status: v as any })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unpaid">Non payé</SelectItem>
+                  <SelectItem value="partial">Partiellement payé</SelectItem>
+                  <SelectItem value="paid">Payé ✓</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Modifier ce champ remplace les paiements existants pour refléter le nouveau statut.
+              </p>
+            </div>
             <Button onClick={save} className="w-full gradient-gold text-noir">
               {editingId ? "Enregistrer les modifications" : "Créer & envoyer message de bienvenue"}
             </Button>
@@ -225,6 +311,15 @@ export default function ReservationsPage() {
                     <span className="font-display text-xl text-foreground">{r.clients?.first_name} {r.clients?.last_name}</span>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full border ${statusColors[r.status]}`}>{statusLabel(r.status)}</span>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full border ${paymentBadgeColor[payStatus]}`}>{statusLabel(payStatus)}</span>
+                    {payStatus !== "settled" && r.total_price > 0 && (
+                      <button
+                        onClick={() => markAsPaid(r)}
+                        className="text-[10px] px-2 py-0.5 rounded-full border border-green-500/40 text-green-400 hover:bg-green-500/15 transition"
+                        title="Marquer toute la réservation comme payée"
+                      >
+                        ✓ Marquer comme payé
+                      </button>
+                    )}
                     <span className="text-xs text-gold font-mono">{r.reservation_code}</span>
                   </div>
                   <div className="text-sm text-muted-foreground">
@@ -252,6 +347,14 @@ export default function ReservationsPage() {
                         <FileSignature className="w-3 h-3" /> Règlement signé
                       </span>
                     )}
+                    {idDocs[r.id] && (
+                      <button
+                        onClick={() => setIdDocOpen({ open: true, data: idDocs[r.id], clientName: `${r.clients?.first_name} ${r.clients?.last_name}` })}
+                        className="inline-flex items-center gap-1 text-blue-400 hover:underline"
+                      >
+                        <IdCard className="w-3 h-3" /> Pièce d'identité
+                      </button>
+                    )}
                     {r.whatsapp_welcome_sent && (
                       <span className="text-blue-400">✓ Bienvenue envoyée</span>
                     )}
@@ -273,6 +376,62 @@ export default function ReservationsPage() {
         })}
         {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-12">Aucune réservation.</p>}
       </div>
+
+      {/* ID document viewer */}
+      <Dialog open={idDocOpen.open} onOpenChange={(v) => setIdDocOpen({ open: v })}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl text-gold-gradient flex items-center gap-2">
+              <IdCard className="w-5 h-5" /> Pièces d'identité {idDocOpen.clientName && `— ${idDocOpen.clientName}`}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {idDocOpen.data?.id_number && (
+              <div className="p-3 rounded-lg border border-border bg-muted/30">
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">N° CNI</div>
+                <div className="font-mono text-lg text-foreground">{idDocOpen.data.id_number}</div>
+              </div>
+            )}
+            {!idDocOpen.data?.front_url && !idDocOpen.data?.back_url && (
+              <p className="text-sm text-muted-foreground">Aucune photo n'a été envoyée par le client.</p>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {idDocOpen.data?.front_url && (
+                <div>
+                  <div className="text-xs text-muted-foreground mb-1">Recto</div>
+                  <button
+                    type="button"
+                    onClick={() => setIdViewer({ open: true, url: idDocOpen.data?.front_url, title: "Recto" })}
+                    className="block w-full overflow-hidden rounded-lg border border-border hover:border-gold/50 transition"
+                  >
+                    <img src={idDocOpen.data.front_url} alt="Recto pièce d'identité" className="w-full h-48 object-cover" />
+                  </button>
+                </div>
+              )}
+              {idDocOpen.data?.back_url && (
+                <div>
+                  <div className="text-xs text-muted-foreground mb-1">Verso</div>
+                  <button
+                    type="button"
+                    onClick={() => setIdViewer({ open: true, url: idDocOpen.data?.back_url, title: "Verso" })}
+                    className="block w-full overflow-hidden rounded-lg border border-border hover:border-gold/50 transition"
+                  >
+                    <img src={idDocOpen.data.back_url} alt="Verso pièce d'identité" className="w-full h-48 object-cover" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Lightbox */}
+      <Dialog open={idViewer.open} onOpenChange={(v) => setIdViewer({ open: v })}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader><DialogTitle>{idViewer.title}</DialogTitle></DialogHeader>
+          {idViewer.url && <img src={idViewer.url} alt={idViewer.title ?? "Document"} className="w-full max-h-[80vh] object-contain" />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
