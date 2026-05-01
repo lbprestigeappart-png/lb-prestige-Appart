@@ -40,6 +40,9 @@ export default function ReservationsPage() {
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ReservationForm>(EMPTY_FORM);
+  const [idDocs, setIdDocs] = useState<Record<string, { id_number?: string; front_url?: string; back_url?: string }>>({});
+  const [idViewer, setIdViewer] = useState<{ open: boolean; url?: string; title?: string }>({ open: false });
+  const [idDocOpen, setIdDocOpen] = useState<{ open: boolean; data?: { id_number?: string; front_url?: string; back_url?: string }; clientName?: string }>({ open: false });
 
   async function load() {
     const [resv, cls] = await Promise.all([
