@@ -65,6 +65,10 @@ export default function ReservationsPage() {
 
   function openEdit(r: any) {
     setEditingId(r.id);
+    const sum = summaries[r.id];
+    const status = (sum?.payment_status_label ?? "unpaid") as string;
+    const payStatus: "unpaid" | "partial" | "paid" =
+      status === "settled" ? "paid" : status === "advance" ? "partial" : "unpaid";
     setForm({
       client_id: r.client_id,
       check_in: r.check_in,
@@ -74,6 +78,7 @@ export default function ReservationsPage() {
       status: r.status,
       internal_notes: r.internal_notes ?? "",
       total_price: Number(r.total_price ?? 0),
+      payment_status: payStatus,
     });
     setOpen(true);
   }
