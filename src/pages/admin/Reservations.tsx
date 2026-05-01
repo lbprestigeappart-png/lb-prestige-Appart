@@ -258,6 +258,20 @@ export default function ReservationsPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label>Statut de paiement</Label>
+              <Select value={form.payment_status} onValueChange={(v) => setForm({ ...form, payment_status: v as any })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unpaid">Non payé</SelectItem>
+                  <SelectItem value="partial">Partiellement payé</SelectItem>
+                  <SelectItem value="paid">Payé ✓</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Modifier ce champ remplace les paiements existants pour refléter le nouveau statut.
+              </p>
+            </div>
             <Button onClick={save} className="w-full gradient-gold text-noir">
               {editingId ? "Enregistrer les modifications" : "Créer & envoyer message de bienvenue"}
             </Button>
