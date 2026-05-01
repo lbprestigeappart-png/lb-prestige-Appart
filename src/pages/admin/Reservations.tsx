@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Eye, Copy, CheckCircle2, FileSignature, Pencil } from "lucide-react";
+import { Plus, Search, Eye, Copy, CheckCircle2, FileSignature, Pencil, IdCard, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate, formatDateTime, nightsBetween, statusLabel, buildClientLink, formatFCFA } from "@/lib/format";
 import SendWhatsappButton from "@/components/admin/SendWhatsappButton";
