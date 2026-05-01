@@ -311,6 +311,15 @@ export default function ReservationsPage() {
                     <span className="font-display text-xl text-foreground">{r.clients?.first_name} {r.clients?.last_name}</span>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full border ${statusColors[r.status]}`}>{statusLabel(r.status)}</span>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full border ${paymentBadgeColor[payStatus]}`}>{statusLabel(payStatus)}</span>
+                    {payStatus !== "settled" && r.total_price > 0 && (
+                      <button
+                        onClick={() => markAsPaid(r)}
+                        className="text-[10px] px-2 py-0.5 rounded-full border border-green-500/40 text-green-400 hover:bg-green-500/15 transition"
+                        title="Marquer toute la réservation comme payée"
+                      >
+                        ✓ Marquer comme payé
+                      </button>
+                    )}
                     <span className="text-xs text-gold font-mono">{r.reservation_code}</span>
                   </div>
                   <div className="text-sm text-muted-foreground">
@@ -337,6 +346,14 @@ export default function ReservationsPage() {
                       <span className="inline-flex items-center gap-1 text-gold">
                         <FileSignature className="w-3 h-3" /> Règlement signé
                       </span>
+                    )}
+                    {idDocs[r.id] && (
+                      <button
+                        onClick={() => setIdDocOpen({ open: true, data: idDocs[r.id], clientName: `${r.clients?.first_name} ${r.clients?.last_name}` })}
+                        className="inline-flex items-center gap-1 text-blue-400 hover:underline"
+                      >
+                        <IdCard className="w-3 h-3" /> Pièce d'identité
+                      </button>
                     )}
                     {r.whatsapp_welcome_sent && (
                       <span className="text-blue-400">✓ Bienvenue envoyée</span>
