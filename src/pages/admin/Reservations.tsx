@@ -57,6 +57,23 @@ export default function ReservationsPage() {
     const map: Record<string, any> = {};
     (sums ?? []).forEach((s: any) => { map[s.reservation_id] = s; });
     setSummaries(map);
+
+    // Load ID documents and produce signed URLs
+    const { data: docs } = await supabase.from("client_id_documents").select("reservation_id, id_number, front_path, back_path");
+    const docsMap: Record<string, { id_number?: string; front_url?: string; back_url?: string }> = {};
+    for (const d of docs ?? []) {
+      const entry: { id_number?: string; front_url?: string; back_url?: string } = { id_number: d.id_number ?? undefined };
+      if (d.front_path) {
+        const { data: s } = await supabase.storage.from("id-documents").createSignedUrl(d.front_path, 3600);
+        entry.front_url = s?.signedUrl;
+      }
+      if (d.back_path) {
+        const { data: s } = await supabase.storage.from("id-documents").createSignedUrl(d.back_path, 3600);
+        entry.back_url = s?.signedUrl;
+      }
+      docsMap[d.reservation_id] = entry;
+    }
+    setIdDocs(docsMap);
   }
   useEffect(() => { load(); }, []);
 
