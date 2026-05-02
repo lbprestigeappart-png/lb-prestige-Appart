@@ -23,6 +23,18 @@ export default function ClientSpace() {
   const [msg, setMsg] = useState("");
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [reviewSent, setReviewSent] = useState(false);
+  const [reviewForm, setReviewForm] = useState({
+    guest_name: "",
+    country: "",
+    booking_ref: "",
+    cleanliness: 5,
+    comfort: 5,
+    location: 5,
+    staff: 5,
+    value: 5,
+  });
+  const [submittingReview, setSubmittingReview] = useState(false);
   const [signName, setSignName] = useState("");
   const [signing, setSigning] = useState(false);
   const [idNumber, setIdNumber] = useState("");
@@ -85,10 +97,26 @@ export default function ClientSpace() {
 
   async function submitReview() {
     if (!token) return;
-    const { error } = await supabase.rpc("submit_client_review", { _token: token, _rating: rating, _comment: comment });
+    if (!reviewForm.guest_name.trim()) return toast.error("Veuillez indiquer votre nom.");
+    if (comment.trim().length < 50) return toast.error("Le commentaire doit contenir au moins 50 caractères.");
+    setSubmittingReview(true);
+    const { error } = await supabase.rpc("submit_client_booking_review", {
+      _token: token,
+      _guest_name: reviewForm.guest_name.trim(),
+      _country: reviewForm.country.trim() || null,
+      _booking_ref: reviewForm.booking_ref.trim() || null,
+      _global_score: rating,
+      _cleanliness: reviewForm.cleanliness,
+      _comfort: reviewForm.comfort,
+      _location: reviewForm.location,
+      _staff: reviewForm.staff,
+      _value: reviewForm.value,
+      _comment: comment.trim(),
+    });
+    setSubmittingReview(false);
     if (error) return toast.error(error.message);
-    toast.success("Merci pour votre avis !");
-    setComment("");
+    toast.success("Merci ! Votre avis a bien été enregistré.");
+    setReviewSent(true);
   }
 
   async function signRules() {
@@ -430,21 +458,122 @@ export default function ClientSpace() {
         {tab === "review" && (
           <Card className="p-6 bg-card border-border">
             <h2 className="font-display text-2xl text-gold-gradient mb-2">Votre avis nous est précieux</h2>
-            <p className="text-sm text-muted-foreground mb-5">Notez votre séjour et partagez votre expérience.</p>
-            <div className="flex gap-2 mb-5 justify-center">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button key={n} onClick={() => setRating(n)} className="transition hover:scale-110">
-                  <Star className={`w-9 h-9 ${n <= rating ? "fill-gold text-gold" : "text-muted-foreground"}`} />
-                </button>
-              ))}
-            </div>
-            <div className="space-y-3">
-              <div>
-                <Label>Commentaire (optionnel)</Label>
-                <Textarea rows={5} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Partagez votre expérience…" />
+            <p className="text-sm text-muted-foreground mb-5">
+              Un seul avis à laisser. Il sera utilisé pour notre profil Booking.com — pas de double saisie.
+            </p>
+
+            {reviewSent ? (
+              <div className="text-center py-6">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full gradient-gold mb-4 shadow-gold">
+                  <CheckCircle2 className="w-7 h-7 text-noir" />
+                </div>
+                <h3 className="font-display text-xl text-gold mb-2">Merci pour votre avis !</h3>
+                <p className="text-sm text-muted-foreground mb-5">
+                  Votre retour a bien été enregistré. Si vous le souhaitez, vous pouvez aussi
+                  le publier directement sur Booking.com.
+                </p>
+                {settings?.booking_review_url ? (
+                  <a href={String(settings.booking_review_url)} target="_blank" rel="noopener noreferrer">
+                    <Button className="gradient-gold text-noir">
+                      <ExternalLink className="w-4 h-4" /> Publier sur Booking.com
+                    </Button>
+                  </a>
+                ) : (
+                  <p className="text-xs text-muted-foreground italic">Lien Booking.com non encore configuré.</p>
+                )}
               </div>
-              <Button onClick={submitReview} className="w-full gradient-gold text-noir">Envoyer mon avis</Button>
-            </div>
+            ) : (
+              <div className="space-y-5">
+                {/* Note globale */}
+                <div className="text-center">
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Note globale</Label>
+                  <div className="flex gap-2 mt-2 justify-center">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <button key={n} type="button" onClick={() => setRating(n)} className="transition hover:scale-110">
+                        <Star className={`w-9 h-9 ${n <= rating ? "fill-gold text-gold" : "text-muted-foreground"}`} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sous-notes */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { k: "cleanliness", label: "Propreté" },
+                    { k: "comfort", label: "Confort" },
+                    { k: "location", label: "Emplacement" },
+                    { k: "staff", label: "Personnel" },
+                    { k: "value", label: "Rapport qualité/prix" },
+                  ].map(({ k, label }) => (
+                    <div key={k} className="p-3 bg-muted rounded-md">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{label}</div>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => setReviewForm((f) => ({ ...f, [k]: n }))}
+                            className="transition hover:scale-110"
+                          >
+                            <Star className={`w-5 h-5 ${n <= (reviewForm as any)[k] ? "fill-gold text-gold" : "text-muted-foreground"}`} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Identité */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <Label>Nom affiché *</Label>
+                    <Input
+                      value={reviewForm.guest_name}
+                      onChange={(e) => setReviewForm((f) => ({ ...f, guest_name: e.target.value }))}
+                      placeholder={`${client?.first_name ?? ""} ${client?.last_name ?? ""}`.trim()}
+                    />
+                  </div>
+                  <div>
+                    <Label>Pays</Label>
+                    <Input
+                      value={reviewForm.country}
+                      onChange={(e) => setReviewForm((f) => ({ ...f, country: e.target.value }))}
+                      placeholder="France, Cameroun…"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Label>Référence Booking (optionnel)</Label>
+                    <Input
+                      value={reviewForm.booking_ref}
+                      onChange={(e) => setReviewForm((f) => ({ ...f, booking_ref: e.target.value }))}
+                      placeholder="ex. 1234567890"
+                    />
+                  </div>
+                </div>
+
+                {/* Commentaire */}
+                <div>
+                  <Label>Commentaire * <span className="text-[10px] text-muted-foreground">(50 caractères minimum)</span></Label>
+                  <Textarea
+                    rows={5}
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Partagez votre expérience en quelques phrases…"
+                  />
+                  <div className={`text-[10px] mt-1 text-right ${comment.length >= 50 ? "text-gold" : "text-muted-foreground"}`}>
+                    {comment.length} / 50
+                  </div>
+                </div>
+
+                <Button
+                  onClick={submitReview}
+                  disabled={submittingReview}
+                  className="w-full gradient-gold text-noir"
+                >
+                  {submittingReview ? "Envoi…" : "Envoyer mon avis"}
+                </Button>
+              </div>
+            )}
           </Card>
         )}
 
