@@ -340,31 +340,61 @@ export type Database = {
       }
       reviews: {
         Row: {
+          booking_ref: string | null
+          cleanliness: number | null
           client_id: string | null
+          comfort: number | null
           comment: string | null
+          country: string | null
           created_at: string
+          guest_name: string | null
           id: string
           is_published: boolean
+          location_score: number | null
           rating: number
           reservation_id: string | null
+          staff: number | null
+          status: string
+          stay_date: string | null
+          value: number | null
         }
         Insert: {
+          booking_ref?: string | null
+          cleanliness?: number | null
           client_id?: string | null
+          comfort?: number | null
           comment?: string | null
+          country?: string | null
           created_at?: string
+          guest_name?: string | null
           id?: string
           is_published?: boolean
+          location_score?: number | null
           rating: number
           reservation_id?: string | null
+          staff?: number | null
+          status?: string
+          stay_date?: string | null
+          value?: number | null
         }
         Update: {
+          booking_ref?: string | null
+          cleanliness?: number | null
           client_id?: string | null
+          comfort?: number | null
           comment?: string | null
+          country?: string | null
           created_at?: string
+          guest_name?: string | null
           id?: string
           is_published?: boolean
+          location_score?: number | null
           rating?: number
           reservation_id?: string | null
+          staff?: number | null
+          status?: string
+          stay_date?: string | null
+          value?: number | null
         }
         Relationships: [
           {
@@ -665,6 +695,22 @@ export type Database = {
       sign_rules: {
         Args: { _signed_name: string; _token: string }
         Returns: undefined
+      }
+      submit_client_booking_review: {
+        Args: {
+          _booking_ref: string
+          _cleanliness: number
+          _comfort: number
+          _comment: string
+          _country: string
+          _global_score: number
+          _guest_name: string
+          _location: number
+          _staff: number
+          _token: string
+          _value: number
+        }
+        Returns: string
       }
       submit_client_id: {
         Args: {
