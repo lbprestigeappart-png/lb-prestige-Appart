@@ -97,10 +97,26 @@ export default function ClientSpace() {
 
   async function submitReview() {
     if (!token) return;
-    const { error } = await supabase.rpc("submit_client_review", { _token: token, _rating: rating, _comment: comment });
+    if (!reviewForm.guest_name.trim()) return toast.error("Veuillez indiquer votre nom.");
+    if (comment.trim().length < 50) return toast.error("Le commentaire doit contenir au moins 50 caractères.");
+    setSubmittingReview(true);
+    const { error } = await supabase.rpc("submit_client_booking_review", {
+      _token: token,
+      _guest_name: reviewForm.guest_name.trim(),
+      _country: reviewForm.country.trim() || null,
+      _booking_ref: reviewForm.booking_ref.trim() || null,
+      _global_score: rating,
+      _cleanliness: reviewForm.cleanliness,
+      _comfort: reviewForm.comfort,
+      _location: reviewForm.location,
+      _staff: reviewForm.staff,
+      _value: reviewForm.value,
+      _comment: comment.trim(),
+    });
+    setSubmittingReview(false);
     if (error) return toast.error(error.message);
-    toast.success("Merci pour votre avis !");
-    setComment("");
+    toast.success("Merci ! Votre avis a bien été enregistré.");
+    setReviewSent(true);
   }
 
   async function signRules() {
