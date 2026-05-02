@@ -23,6 +23,18 @@ export default function ClientSpace() {
   const [msg, setMsg] = useState("");
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [reviewSent, setReviewSent] = useState(false);
+  const [reviewForm, setReviewForm] = useState({
+    guest_name: "",
+    country: "",
+    booking_ref: "",
+    cleanliness: 5,
+    comfort: 5,
+    location: 5,
+    staff: 5,
+    value: 5,
+  });
+  const [submittingReview, setSubmittingReview] = useState(false);
   const [signName, setSignName] = useState("");
   const [signing, setSigning] = useState(false);
   const [idNumber, setIdNumber] = useState("");
