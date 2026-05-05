@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { formatDate, nightsBetween, formatDateTime } from "@/lib/format";
 
 export default function ClientSpace() {
   const { token } = useParams<{ token: string }>();
+  const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"home" | "info" | "messages" | "docs" | "review">("home");
@@ -117,6 +118,19 @@ export default function ClientSpace() {
     if (error) return toast.error(error.message);
     toast.success("Merci ! Votre avis a bien été enregistré.");
     setReviewSent(true);
+    navigate("/avis/merci", {
+      state: {
+        guest_name: reviewForm.guest_name.trim(),
+        global_score: rating,
+        cleanliness: reviewForm.cleanliness,
+        comfort: reviewForm.comfort,
+        location: reviewForm.location,
+        staff: reviewForm.staff,
+        value: reviewForm.value,
+        comment: comment.trim(),
+        booking_property_id: (data as any)?.settings?.booking_property_id ?? (data as any)?.property?.booking_property_id ?? null,
+      },
+    });
   }
 
   async function signRules() {
