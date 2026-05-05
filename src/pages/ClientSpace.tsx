@@ -144,14 +144,14 @@ export default function ClientSpace() {
     refresh();
   }
 
-  async function uploadIdFile(file: File, kind: "front" | "back"): Promise<string | null> {
-    if (!token) return null;
+  async function uploadIdFile(file: File, kind: "front" | "back"): Promise<string> {
+    if (!token) throw new Error("Token manquant");
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
     const path = `${token}/${kind}-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("id-documents").upload(path, file, {
       upsert: true, contentType: file.type || "image/jpeg",
     });
-    if (error) { toast.error(`Upload ${kind}: ${error.message}`); return null; }
+    if (error) throw new Error(`Échec de l'envoi de la photo (${kind}) : ${error.message}`);
     return path;
   }
 
@@ -163,8 +163,13 @@ export default function ClientSpace() {
     try {
       let frontPath: string | null = data?.id_document?.front_path ?? null;
       let backPath: string | null = data?.id_document?.back_path ?? null;
-      if (frontFile) frontPath = await uploadIdFile(frontFile, "front");
-      if (backFile) backPath = await uploadIdFile(backFile, "back");
+      try {
+        if (frontFile) frontPath = await uploadIdFile(frontFile, "front");
+        if (backFile) backPath = await uploadIdFile(backFile, "back");
+      } catch (e: any) {
+        toast.error(e?.message ?? "Échec de l'envoi des photos. Réessayez.");
+        return;
+      }
       const { error } = await supabase.rpc("submit_client_id", {
         _token: token, _id_number: idNumber.trim(),
         _front_path: frontPath, _back_path: backPath,
