@@ -8,6 +8,7 @@ import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Auth from "./pages/Auth.tsx";
 import ClientSpace from "./pages/ClientSpace.tsx";
+import AvisMerci from "./pages/AvisMerci.tsx";
 import AdminLayout from "./components/admin/AdminLayout.tsx";
 import Dashboard from "./pages/admin/Dashboard.tsx";
 import Clients from "./pages/admin/Clients.tsx";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/client/:token" element={<ClientSpace />} />
+            <Route path="/avis/merci" element={<AvisMerci />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="clients" element={<Clients />} />
