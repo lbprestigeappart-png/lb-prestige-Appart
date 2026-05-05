@@ -687,6 +687,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_valid_reservation_token: { Args: { _token: string }; Returns: boolean }
       mark_client_link_opened: { Args: { _token: string }; Returns: undefined }
       send_client_message: {
         Args: { _content: string; _token: string }
