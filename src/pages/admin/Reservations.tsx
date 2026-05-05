@@ -135,6 +135,13 @@ export default function ReservationsPage() {
     const { payment_status, ...resvFields } = form;
 
     if (editingId) {
+      // Lire l'état actuel pour détecter un passage à "confirmed"
+      const { data: prev } = await supabase
+        .from("reservations")
+        .select("status, whatsapp_welcome_sent")
+        .eq("id", editingId)
+        .maybeSingle();
+
       const { error } = await supabase.from("reservations").update(resvFields as any).eq("id", editingId);
       if (error) return toast.error(error.message);
       const sum = summaries[editingId];
@@ -143,7 +150,21 @@ export default function ReservationsPage() {
       if (currentMapped !== payment_status) {
         await syncPaymentStatus(editingId, resvFields.total_price, payment_status);
       }
-      toast.success("Réservation mise à jour");
+
+      // Envoi du message de bienvenue à la confirmation (si pas déjà envoyé)
+      const becameConfirmed =
+        resvFields.status === "confirmed" &&
+        prev?.status !== "confirmed" &&
+        !prev?.whatsapp_welcome_sent;
+      if (becameConfirmed) {
+        await supabase.functions.invoke("send-whatsapp", {
+          body: { reservation_id: editingId, template_key: "welcome" },
+        });
+        await supabase.from("reservations").update({ whatsapp_welcome_sent: true } as any).eq("id", editingId);
+        toast.success("Réservation confirmée — message de bienvenue envoyé");
+      } else {
+        toast.success("Réservation mise à jour");
+      }
     } else {
       const { data, error } = await supabase.from("reservations").insert(resvFields as any).select("*, clients(first_name,phone)").single();
       if (error) return toast.error(error.message);
