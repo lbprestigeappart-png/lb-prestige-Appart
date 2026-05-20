@@ -653,3 +653,87 @@ function IdUploadFields({ idNumber, setIdNumber, setFrontFile, setBackFile, onSu
   );
 }
 
+function IdStatusTracker({
+  idNumber, frontPath, backPath, submittedAt,
+}: {
+  idNumber: string | null;
+  frontPath: string | null;
+  backPath: string | null;
+  submittedAt: string | null;
+}) {
+  const items = [
+    { key: "number", label: "Numéro de CNI", icon: Hash, done: !!idNumber, detail: idNumber ? <span className="font-mono">{idNumber}</span> : "En attente" },
+    { key: "front", label: "Photo recto", icon: ImageIcon, done: !!frontPath, detail: frontPath ? "Reçue" : "En attente" },
+    { key: "back", label: "Photo verso", icon: ImageIcon, done: !!backPath, detail: backPath ? "Reçue" : "En attente" },
+  ];
+  const completed = items.filter((i) => i.done).length;
+  const total = items.length;
+  const allDone = completed === total;
+  const nothing = completed === 0;
+
+  return (
+    <div className="space-y-3">
+      <div
+        className={`p-3 rounded-md border ${
+          allDone ? "bg-gold/10 border-gold/40" : nothing ? "bg-secondary/40 border-border" : "bg-secondary/60 border-gold/20"
+        }`}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            {allDone ? (
+              <CheckCircle2 className="w-4 h-4 text-gold shrink-0" />
+            ) : (
+              <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
+            )}
+            <div className="text-xs font-medium text-foreground">
+              {allDone ? "Envoi complet" : nothing ? "Aucun élément envoyé" : "Envoi en cours"}
+            </div>
+          </div>
+          <div className="text-[11px] font-mono text-muted-foreground">{completed}/{total}</div>
+        </div>
+        <div className="mt-2 h-1 rounded-full bg-background/50 overflow-hidden">
+          <div
+            className="h-full gradient-gold transition-all duration-500"
+            style={{ width: `${(completed / total) * 100}%` }}
+          />
+        </div>
+        {submittedAt && (
+          <div className="text-[10px] text-muted-foreground mt-2">
+            Dernière mise à jour : {formatDateTime(submittedAt)}
+          </div>
+        )}
+      </div>
+
+      <ul className="space-y-1.5">
+        {items.map((it) => {
+          const Icon = it.icon;
+          return (
+            <li
+              key={it.key}
+              className={`flex items-center justify-between gap-3 px-3 py-2 rounded-md border text-xs ${
+                it.done ? "bg-gold/5 border-gold/30" : "bg-secondary/30 border-border"
+              }`}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <Icon className={`w-3.5 h-3.5 shrink-0 ${it.done ? "text-gold" : "text-muted-foreground"}`} />
+                <span className="font-medium text-foreground truncate">{it.label}</span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className={`text-[11px] ${it.done ? "text-foreground" : "text-muted-foreground"}`}>
+                  {it.detail}
+                </span>
+                {it.done ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-gold" />
+                ) : (
+                  <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+
