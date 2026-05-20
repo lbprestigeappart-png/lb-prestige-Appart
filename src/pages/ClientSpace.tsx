@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import {
   Crown, Wifi, KeyRound, Tv, ChefHat, Car, BookOpen, Phone,
   MessageSquare, FileText, Star, MapPin, CalendarDays, Send, ExternalLink, Sparkles,
-  FileSignature, CheckCircle2, IdCard, Upload,
+  FileSignature, CheckCircle2, IdCard, Upload, Clock, Hash, Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate, nightsBetween, formatDateTime } from "@/lib/format";
