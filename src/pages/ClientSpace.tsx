@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import {
   Crown, Wifi, KeyRound, Tv, ChefHat, Car, BookOpen, Phone,
   MessageSquare, FileText, Star, MapPin, CalendarDays, Send, ExternalLink, Sparkles,
-  FileSignature, CheckCircle2, IdCard, Upload,
+  FileSignature, CheckCircle2, IdCard, Upload, Clock, Hash, Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate, nightsBetween, formatDateTime } from "@/lib/format";
@@ -379,42 +379,42 @@ export default function ClientSpace() {
             </InfoCard>
 
             <InfoCard icon={IdCard} title="Pièce d'identité (CNI)">
-              {data.id_document ? (
-                <div className="p-3 rounded-md bg-gold/10 border border-gold/30 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-gold shrink-0" />
-                    <div className="text-xs font-medium text-foreground">Pièce d'identité reçue</div>
+              <IdStatusTracker
+                idNumber={data.id_document?.id_number ?? null}
+                frontPath={data.id_document?.front_path ?? null}
+                backPath={data.id_document?.back_path ?? null}
+                submittedAt={data.id_document?.submitted_at ?? null}
+              />
+              <div className="mt-3">
+                {data.id_document ? (
+                  <details className="group">
+                    <summary className="text-[11px] text-muted-foreground italic cursor-pointer hover:text-foreground transition-colors">
+                      Renvoyer ou compléter une photo
+                    </summary>
+                    <div className="mt-2">
+                      <IdUploadFields
+                        idNumber={idNumber} setIdNumber={setIdNumber}
+                        setFrontFile={setFrontFile} setBackFile={setBackFile}
+                        onSubmit={submitId} uploading={uploadingId}
+                        frontFile={frontFile} backFile={backFile}
+                      />
+                    </div>
+                  </details>
+                ) : (
+                  <div className="p-3 rounded-md bg-secondary/50 border border-border space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-medium">
+                      <Upload className="w-3 h-3 text-gold" />
+                      Envoyez votre numéro CNI et une photo recto/verso
+                    </div>
+                    <IdUploadFields
+                      idNumber={idNumber} setIdNumber={setIdNumber}
+                      setFrontFile={setFrontFile} setBackFile={setBackFile}
+                      onSubmit={submitId} uploading={uploadingId}
+                      frontFile={frontFile} backFile={backFile}
+                    />
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    N° : <span className="font-mono text-foreground">{data.id_document.id_number}</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Transmise le {formatDateTime(data.id_document.submitted_at)}
-                  </div>
-                  <p className="text-[11px] text-muted-foreground italic pt-1">
-                    Vous pouvez renvoyer une nouvelle photo si nécessaire :
-                  </p>
-                  <IdUploadFields
-                    idNumber={idNumber} setIdNumber={setIdNumber}
-                    setFrontFile={setFrontFile} setBackFile={setBackFile}
-                    onSubmit={submitId} uploading={uploadingId}
-                    frontFile={frontFile} backFile={backFile}
-                  />
-                </div>
-              ) : (
-                <div className="p-3 rounded-md bg-secondary/50 border border-border space-y-2">
-                  <div className="flex items-center gap-2 text-xs font-medium">
-                    <Upload className="w-3 h-3 text-gold" />
-                    Envoyez votre numéro CNI et une photo recto/verso
-                  </div>
-                  <IdUploadFields
-                    idNumber={idNumber} setIdNumber={setIdNumber}
-                    setFrontFile={setFrontFile} setBackFile={setBackFile}
-                    onSubmit={submitId} uploading={uploadingId}
-                    frontFile={frontFile} backFile={backFile}
-                  />
-                </div>
-              )}
+                )}
+              </div>
             </InfoCard>
             <InfoCard icon={Phone} title="Contacts utiles">
               {settings?.useful_contacts?.phone && <KeyValue label="Téléphone" value={settings.useful_contacts.phone} />}
@@ -652,4 +652,88 @@ function IdUploadFields({ idNumber, setIdNumber, setFrontFile, setBackFile, onSu
     </div>
   );
 }
+
+function IdStatusTracker({
+  idNumber, frontPath, backPath, submittedAt,
+}: {
+  idNumber: string | null;
+  frontPath: string | null;
+  backPath: string | null;
+  submittedAt: string | null;
+}) {
+  const items = [
+    { key: "number", label: "Numéro de CNI", icon: Hash, done: !!idNumber, detail: idNumber ? <span className="font-mono">{idNumber}</span> : "En attente" },
+    { key: "front", label: "Photo recto", icon: ImageIcon, done: !!frontPath, detail: frontPath ? "Reçue" : "En attente" },
+    { key: "back", label: "Photo verso", icon: ImageIcon, done: !!backPath, detail: backPath ? "Reçue" : "En attente" },
+  ];
+  const completed = items.filter((i) => i.done).length;
+  const total = items.length;
+  const allDone = completed === total;
+  const nothing = completed === 0;
+
+  return (
+    <div className="space-y-3">
+      <div
+        className={`p-3 rounded-md border ${
+          allDone ? "bg-gold/10 border-gold/40" : nothing ? "bg-secondary/40 border-border" : "bg-secondary/60 border-gold/20"
+        }`}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            {allDone ? (
+              <CheckCircle2 className="w-4 h-4 text-gold shrink-0" />
+            ) : (
+              <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
+            )}
+            <div className="text-xs font-medium text-foreground">
+              {allDone ? "Envoi complet" : nothing ? "Aucun élément envoyé" : "Envoi en cours"}
+            </div>
+          </div>
+          <div className="text-[11px] font-mono text-muted-foreground">{completed}/{total}</div>
+        </div>
+        <div className="mt-2 h-1 rounded-full bg-background/50 overflow-hidden">
+          <div
+            className="h-full gradient-gold transition-all duration-500"
+            style={{ width: `${(completed / total) * 100}%` }}
+          />
+        </div>
+        {submittedAt && (
+          <div className="text-[10px] text-muted-foreground mt-2">
+            Dernière mise à jour : {formatDateTime(submittedAt)}
+          </div>
+        )}
+      </div>
+
+      <ul className="space-y-1.5">
+        {items.map((it) => {
+          const Icon = it.icon;
+          return (
+            <li
+              key={it.key}
+              className={`flex items-center justify-between gap-3 px-3 py-2 rounded-md border text-xs ${
+                it.done ? "bg-gold/5 border-gold/30" : "bg-secondary/30 border-border"
+              }`}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <Icon className={`w-3.5 h-3.5 shrink-0 ${it.done ? "text-gold" : "text-muted-foreground"}`} />
+                <span className="font-medium text-foreground truncate">{it.label}</span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className={`text-[11px] ${it.done ? "text-foreground" : "text-muted-foreground"}`}>
+                  {it.detail}
+                </span>
+                {it.done ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-gold" />
+                ) : (
+                  <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 
