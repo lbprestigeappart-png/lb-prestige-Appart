@@ -379,42 +379,42 @@ export default function ClientSpace() {
             </InfoCard>
 
             <InfoCard icon={IdCard} title="Pièce d'identité (CNI)">
-              {data.id_document ? (
-                <div className="p-3 rounded-md bg-gold/10 border border-gold/30 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-gold shrink-0" />
-                    <div className="text-xs font-medium text-foreground">Pièce d'identité reçue</div>
+              <IdStatusTracker
+                idNumber={data.id_document?.id_number ?? null}
+                frontPath={data.id_document?.front_path ?? null}
+                backPath={data.id_document?.back_path ?? null}
+                submittedAt={data.id_document?.submitted_at ?? null}
+              />
+              <div className="mt-3">
+                {data.id_document ? (
+                  <details className="group">
+                    <summary className="text-[11px] text-muted-foreground italic cursor-pointer hover:text-foreground transition-colors">
+                      Renvoyer ou compléter une photo
+                    </summary>
+                    <div className="mt-2">
+                      <IdUploadFields
+                        idNumber={idNumber} setIdNumber={setIdNumber}
+                        setFrontFile={setFrontFile} setBackFile={setBackFile}
+                        onSubmit={submitId} uploading={uploadingId}
+                        frontFile={frontFile} backFile={backFile}
+                      />
+                    </div>
+                  </details>
+                ) : (
+                  <div className="p-3 rounded-md bg-secondary/50 border border-border space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-medium">
+                      <Upload className="w-3 h-3 text-gold" />
+                      Envoyez votre numéro CNI et une photo recto/verso
+                    </div>
+                    <IdUploadFields
+                      idNumber={idNumber} setIdNumber={setIdNumber}
+                      setFrontFile={setFrontFile} setBackFile={setBackFile}
+                      onSubmit={submitId} uploading={uploadingId}
+                      frontFile={frontFile} backFile={backFile}
+                    />
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    N° : <span className="font-mono text-foreground">{data.id_document.id_number}</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Transmise le {formatDateTime(data.id_document.submitted_at)}
-                  </div>
-                  <p className="text-[11px] text-muted-foreground italic pt-1">
-                    Vous pouvez renvoyer une nouvelle photo si nécessaire :
-                  </p>
-                  <IdUploadFields
-                    idNumber={idNumber} setIdNumber={setIdNumber}
-                    setFrontFile={setFrontFile} setBackFile={setBackFile}
-                    onSubmit={submitId} uploading={uploadingId}
-                    frontFile={frontFile} backFile={backFile}
-                  />
-                </div>
-              ) : (
-                <div className="p-3 rounded-md bg-secondary/50 border border-border space-y-2">
-                  <div className="flex items-center gap-2 text-xs font-medium">
-                    <Upload className="w-3 h-3 text-gold" />
-                    Envoyez votre numéro CNI et une photo recto/verso
-                  </div>
-                  <IdUploadFields
-                    idNumber={idNumber} setIdNumber={setIdNumber}
-                    setFrontFile={setFrontFile} setBackFile={setBackFile}
-                    onSubmit={submitId} uploading={uploadingId}
-                    frontFile={frontFile} backFile={backFile}
-                  />
-                </div>
-              )}
+                )}
+              </div>
             </InfoCard>
             <InfoCard icon={Phone} title="Contacts utiles">
               {settings?.useful_contacts?.phone && <KeyValue label="Téléphone" value={settings.useful_contacts.phone} />}
