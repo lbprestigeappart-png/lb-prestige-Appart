@@ -10,6 +10,7 @@ import {
   Crown, Wifi, KeyRound, Tv, ChefHat, Car, BookOpen, Phone,
   MessageSquare, FileText, Star, MapPin, CalendarDays, Send, ExternalLink, Sparkles,
   FileSignature, CheckCircle2, IdCard, Upload, Clock, Hash, Image as ImageIcon,
+  UtensilsCrossed,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate, nightsBetween, formatDateTime } from "@/lib/format";
@@ -19,7 +20,8 @@ export default function ClientSpace() {
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"home" | "info" | "messages" | "docs" | "review">("home");
+  const [tab, setTab] = useState<"home" | "info" | "messages" | "docs" | "review" | "restaurants">("home");
+  const [restaurants, setRestaurants] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
   const [msg, setMsg] = useState("");
   const [rating, setRating] = useState(5);
@@ -79,6 +81,25 @@ export default function ClientSpace() {
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [token]);
+
+  async function loadRestaurants() {
+    const { data: rs } = await supabase.from("restaurants" as any)
+      .select("*").order("display_order").order("created_at");
+    const { data: ds } = await supabase.from("restaurant_dishes" as any)
+      .select("*").order("display_order");
+    const grouped = ((rs ?? []) as any[]).map((r) => ({
+      ...r, dishes: ((ds ?? []) as any[]).filter((d) => d.restaurant_id === r.id),
+    }));
+    setRestaurants(grouped);
+  }
+  useEffect(() => { loadRestaurants(); }, []);
+  useEffect(() => {
+    const ch = supabase.channel("restaurants-public")
+      .on("postgres_changes", { event: "*", schema: "public", table: "restaurants" }, () => loadRestaurants())
+      .on("postgres_changes", { event: "*", schema: "public", table: "restaurant_dishes" }, () => loadRestaurants())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, []);
 
   useEffect(() => {
     if (!data?.reservation?.id) return;
@@ -295,6 +316,7 @@ export default function ClientSpace() {
             { k: "messages", label: "Messages" },
             { k: "docs", label: "Documents" },
             { k: "review", label: "Laisser un avis" },
+            { k: "restaurants", label: "Restaurants" },
           ].map((t) => (
             <button key={t.k} onClick={() => setTab(t.k as any)}
               className={`whitespace-nowrap px-4 py-2 rounded-md text-sm transition ${tab === t.k ? "bg-gold text-noir font-medium" : "bg-card border border-border hover:border-gold/40"}`}>
@@ -595,6 +617,81 @@ export default function ClientSpace() {
             )}
           </Card>
         )}
+
+        {tab === "restaurants" && (
+          <div className="grid gap-4">
+            <Card className="p-5 bg-card border-gold/20">
+              <div className="flex items-center gap-2 mb-1">
+                <UtensilsCrossed className="w-5 h-5 text-gold" />
+                <h2 className="font-display text-2xl text-gold-gradient">Conciergerie Restauration</h2>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Découvrez nos restaurants partenaires et commandez directement via WhatsApp.
+              </p>
+            </Card>
+
+            {restaurants.length === 0 ? (
+              <Card className="p-8 text-center text-sm text-muted-foreground">
+                Aucun restaurant partenaire pour le moment.
+              </Card>
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-4">
+                {restaurants.map((r) => {
+                  const waNum = (r.phone || "").replace(/\D/g, "");
+                  const message = encodeURIComponent(
+                    `Bonjour ${r.name}, je séjourne actuellement à LB Prestige Appart et je souhaite commander…`
+                  );
+                  return (
+                    <Card key={r.id} className="p-5 bg-card border-border flex flex-col">
+                      <div className="mb-3 pb-3 border-b border-border">
+                        <h3 className="font-display text-xl text-foreground">{r.name}</h3>
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                          <Phone className="w-3 h-3" />
+                          <span className="font-mono">{r.phone}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 mb-4">
+                        <div className="text-[10px] uppercase tracking-wider text-gold mb-2">Menu & Tarifs</div>
+                        {(r.dishes ?? []).length === 0 ? (
+                          <p className="text-xs italic text-muted-foreground">Menu bientôt disponible.</p>
+                        ) : (
+                          <ul className="space-y-2.5">
+                            {r.dishes.map((d: any) => (
+                              <li key={d.id} className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <div className="text-sm font-medium text-foreground">{d.name}</div>
+                                  {d.description && (
+                                    <div className="text-[11px] text-muted-foreground leading-snug">{d.description}</div>
+                                  )}
+                                </div>
+                                <div className="text-sm font-mono text-gold whitespace-nowrap shrink-0">
+                                  {Number(d.price_fcfa).toLocaleString("fr-FR")} FCFA
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+
+                      <a
+                        href={`https://wa.me/${waNum}?text=${message}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-auto"
+                      >
+                        <Button className="w-full gradient-gold text-noir">
+                          <Send className="w-4 h-4" /> Commander sur WhatsApp
+                        </Button>
+                      </a>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
 
         <footer className="text-center text-xs text-muted-foreground mt-10 py-6">
           © {new Date().getFullYear()} {property?.name} • Conciergerie d'Exception

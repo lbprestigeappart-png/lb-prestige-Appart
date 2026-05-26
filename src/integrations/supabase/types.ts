@@ -338,6 +338,80 @@ export type Database = {
           },
         ]
       }
+      restaurant_dishes: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          name: string
+          price_fcfa: number
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          name: string
+          price_fcfa?: number
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          name?: string
+          price_fcfa?: number
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_dishes_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurants: {
+        Row: {
+          contract_path: string | null
+          contract_signed: boolean
+          created_at: string
+          display_order: number
+          id: string
+          name: string
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          contract_path?: string | null
+          contract_signed?: boolean
+          created_at?: string
+          display_order?: number
+          id?: string
+          name: string
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          contract_path?: string | null
+          contract_signed?: boolean
+          created_at?: string
+          display_order?: number
+          id?: string
+          name?: string
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           booking_ref: string | null
