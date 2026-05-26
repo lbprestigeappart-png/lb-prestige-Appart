@@ -618,6 +618,81 @@ export default function ClientSpace() {
           </Card>
         )}
 
+        {tab === "restaurants" && (
+          <div className="grid gap-4">
+            <Card className="p-5 bg-card border-gold/20">
+              <div className="flex items-center gap-2 mb-1">
+                <UtensilsCrossed className="w-5 h-5 text-gold" />
+                <h2 className="font-display text-2xl text-gold-gradient">Conciergerie Restauration</h2>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Découvrez nos restaurants partenaires et commandez directement via WhatsApp.
+              </p>
+            </Card>
+
+            {restaurants.length === 0 ? (
+              <Card className="p-8 text-center text-sm text-muted-foreground">
+                Aucun restaurant partenaire pour le moment.
+              </Card>
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-4">
+                {restaurants.map((r) => {
+                  const waNum = (r.phone || "").replace(/\D/g, "");
+                  const message = encodeURIComponent(
+                    `Bonjour ${r.name}, je séjourne actuellement à LB Prestige Appart et je souhaite commander…`
+                  );
+                  return (
+                    <Card key={r.id} className="p-5 bg-card border-border flex flex-col">
+                      <div className="mb-3 pb-3 border-b border-border">
+                        <h3 className="font-display text-xl text-foreground">{r.name}</h3>
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                          <Phone className="w-3 h-3" />
+                          <span className="font-mono">{r.phone}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 mb-4">
+                        <div className="text-[10px] uppercase tracking-wider text-gold mb-2">Menu & Tarifs</div>
+                        {(r.dishes ?? []).length === 0 ? (
+                          <p className="text-xs italic text-muted-foreground">Menu bientôt disponible.</p>
+                        ) : (
+                          <ul className="space-y-2.5">
+                            {r.dishes.map((d: any) => (
+                              <li key={d.id} className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <div className="text-sm font-medium text-foreground">{d.name}</div>
+                                  {d.description && (
+                                    <div className="text-[11px] text-muted-foreground leading-snug">{d.description}</div>
+                                  )}
+                                </div>
+                                <div className="text-sm font-mono text-gold whitespace-nowrap shrink-0">
+                                  {Number(d.price_fcfa).toLocaleString("fr-FR")} FCFA
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+
+                      <a
+                        href={`https://wa.me/${waNum}?text=${message}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-auto"
+                      >
+                        <Button className="w-full gradient-gold text-noir">
+                          <Send className="w-4 h-4" /> Commander sur WhatsApp
+                        </Button>
+                      </a>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+
         <footer className="text-center text-xs text-muted-foreground mt-10 py-6">
           © {new Date().getFullYear()} {property?.name} • Conciergerie d'Exception
         </footer>
