@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   LayoutDashboard, Users, CalendarRange, MessageSquare, Star, CreditCard,
   Settings, FileText, Send, Megaphone, KeyRound, Wifi, BookOpen, Bell,
-  LogOut, Crown, Image, Phone, ChefHat, Car
+  LogOut, Crown, Image, Phone, ChefHat, Car, UtensilsCrossed
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -28,6 +28,7 @@ const nav = [
   { to: "/admin/banner", icon: Image, label: "Bannière" },
   { to: "/admin/notifications", icon: Bell, label: "Notifications" },
   { to: "/admin/settings", icon: Settings, label: "Paramètres" },
+  { to: "/admin/restaurants", icon: UtensilsCrossed, label: "Restaurants" },
 ];
 
 export default function AdminLayout() {

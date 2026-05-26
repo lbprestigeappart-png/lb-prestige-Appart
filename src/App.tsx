@@ -29,6 +29,7 @@ import Documents from "./pages/admin/Documents.tsx";
 import Banner from "./pages/admin/Banner.tsx";
 import Notifications from "./pages/admin/Notifications.tsx";
 import SettingsPage from "./pages/admin/Settings.tsx";
+import RestaurantsAdmin from "./pages/admin/Restaurants.tsx";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const App = () => (
               <Route path="banner" element={<Banner />} />
               <Route path="notifications" element={<Notifications />} />
               <Route path="settings" element={<SettingsPage />} />
+              <Route path="restaurants" element={<RestaurantsAdmin />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
