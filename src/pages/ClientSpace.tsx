@@ -10,6 +10,7 @@ import {
   Crown, Wifi, KeyRound, Tv, ChefHat, Car, BookOpen, Phone,
   MessageSquare, FileText, Star, MapPin, CalendarDays, Send, ExternalLink, Sparkles,
   FileSignature, CheckCircle2, IdCard, Upload, Clock, Hash, Image as ImageIcon,
+  UtensilsCrossed,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate, nightsBetween, formatDateTime } from "@/lib/format";
@@ -19,7 +20,8 @@ export default function ClientSpace() {
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"home" | "info" | "messages" | "docs" | "review">("home");
+  const [tab, setTab] = useState<"home" | "info" | "messages" | "docs" | "review" | "restaurants">("home");
+  const [restaurants, setRestaurants] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
   const [msg, setMsg] = useState("");
   const [rating, setRating] = useState(5);
