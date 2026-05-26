@@ -82,6 +82,25 @@ export default function ClientSpace() {
     return () => { supabase.removeChannel(ch); };
   }, [token]);
 
+  async function loadRestaurants() {
+    const { data: rs } = await supabase.from("restaurants" as any)
+      .select("*").order("display_order").order("created_at");
+    const { data: ds } = await supabase.from("restaurant_dishes" as any)
+      .select("*").order("display_order");
+    const grouped = ((rs ?? []) as any[]).map((r) => ({
+      ...r, dishes: ((ds ?? []) as any[]).filter((d) => d.restaurant_id === r.id),
+    }));
+    setRestaurants(grouped);
+  }
+  useEffect(() => { loadRestaurants(); }, []);
+  useEffect(() => {
+    const ch = supabase.channel("restaurants-public")
+      .on("postgres_changes", { event: "*", schema: "public", table: "restaurants" }, () => loadRestaurants())
+      .on("postgres_changes", { event: "*", schema: "public", table: "restaurant_dishes" }, () => loadRestaurants())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, []);
+
   useEffect(() => {
     if (!data?.reservation?.id) return;
     const ch = supabase.channel(`client-${data.reservation.id}`)
@@ -297,6 +316,7 @@ export default function ClientSpace() {
             { k: "messages", label: "Messages" },
             { k: "docs", label: "Documents" },
             { k: "review", label: "Laisser un avis" },
+            { k: "restaurants", label: "Restaurants" },
           ].map((t) => (
             <button key={t.k} onClick={() => setTab(t.k as any)}
               className={`whitespace-nowrap px-4 py-2 rounded-md text-sm transition ${tab === t.k ? "bg-gold text-noir font-medium" : "bg-card border border-border hover:border-gold/40"}`}>
