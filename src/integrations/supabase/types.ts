@@ -344,6 +344,7 @@ export type Database = {
           description: string | null
           display_order: number
           id: string
+          image_path: string | null
           name: string
           price_fcfa: number
           restaurant_id: string
@@ -354,6 +355,7 @@ export type Database = {
           description?: string | null
           display_order?: number
           id?: string
+          image_path?: string | null
           name: string
           price_fcfa?: number
           restaurant_id: string
@@ -364,6 +366,7 @@ export type Database = {
           description?: string | null
           display_order?: number
           id?: string
+          image_path?: string | null
           name?: string
           price_fcfa?: number
           restaurant_id?: string
@@ -378,6 +381,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      restaurant_drinks: {
+        Row: {
+          created_at: string
+          display_order: number
+          drink_type: string
+          id: string
+          image_path: string | null
+          name: string
+          price_fcfa: number
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          drink_type?: string
+          id?: string
+          image_path?: string | null
+          name: string
+          price_fcfa?: number
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          drink_type?: string
+          id?: string
+          image_path?: string | null
+          name?: string
+          price_fcfa?: number
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       restaurants: {
         Row: {
