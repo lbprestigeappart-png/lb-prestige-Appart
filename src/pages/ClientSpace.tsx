@@ -22,6 +22,9 @@ export default function ClientSpace() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"home" | "info" | "messages" | "docs" | "review" | "restaurants">("home");
   const [restaurants, setRestaurants] = useState<any[]>([]);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
+  const [cart, setCart] = useState<Record<string, { id: string; kind: "dish" | "drink"; name: string; price: number; qty: number; restaurantId: string }>>({});
+  const [cartOpen, setCartOpen] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
   const [msg, setMsg] = useState("");
   const [rating, setRating] = useState(5);
