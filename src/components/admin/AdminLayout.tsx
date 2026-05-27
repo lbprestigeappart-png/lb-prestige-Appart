@@ -27,8 +27,8 @@ const nav = [
   { to: "/admin/documents", icon: FileText, label: "Documents" },
   { to: "/admin/banner", icon: Image, label: "Bannière" },
   { to: "/admin/notifications", icon: Bell, label: "Notifications" },
-  { to: "/admin/settings", icon: Settings, label: "Paramètres" },
   { to: "/admin/restaurants", icon: UtensilsCrossed, label: "Restaurants" },
+  { to: "/admin/settings", icon: Settings, label: "Paramètres" },
 ];
 
 export default function AdminLayout() {
