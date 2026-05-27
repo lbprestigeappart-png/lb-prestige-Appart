@@ -83,12 +83,15 @@ export default function ClientSpace() {
   }, [token]);
 
   async function loadRestaurants() {
-    const { data: rs } = await supabase.from("restaurants" as any)
-      .select("*").order("display_order").order("created_at");
-    const { data: ds } = await supabase.from("restaurant_dishes" as any)
-      .select("*").order("display_order");
+    const [{ data: rs }, { data: ds }, { data: bs }] = await Promise.all([
+      supabase.from("restaurants" as any).select("*").order("display_order").order("created_at"),
+      supabase.from("restaurant_dishes" as any).select("*").order("display_order"),
+      supabase.from("restaurant_drinks" as any).select("*").order("display_order"),
+    ]);
     const grouped = ((rs ?? []) as any[]).map((r) => ({
-      ...r, dishes: ((ds ?? []) as any[]).filter((d) => d.restaurant_id === r.id),
+      ...r,
+      dishes: ((ds ?? []) as any[]).filter((d) => d.restaurant_id === r.id),
+      drinks: ((bs ?? []) as any[]).filter((d) => d.restaurant_id === r.id),
     }));
     setRestaurants(grouped);
   }
@@ -97,6 +100,7 @@ export default function ClientSpace() {
     const ch = supabase.channel("restaurants-public")
       .on("postgres_changes", { event: "*", schema: "public", table: "restaurants" }, () => loadRestaurants())
       .on("postgres_changes", { event: "*", schema: "public", table: "restaurant_dishes" }, () => loadRestaurants())
+      .on("postgres_changes", { event: "*", schema: "public", table: "restaurant_drinks" }, () => loadRestaurants())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
