@@ -30,6 +30,7 @@ import Banner from "./pages/admin/Banner.tsx";
 import Notifications from "./pages/admin/Notifications.tsx";
 import SettingsPage from "./pages/admin/Settings.tsx";
 import RestaurantsAdmin from "./pages/admin/Restaurants.tsx";
+import Identites from "./pages/admin/Identites.tsx";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="notifications" element={<Notifications />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="restaurants" element={<RestaurantsAdmin />} />
+              <Route path="identites" element={<Identites />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,0 +1,215 @@
+/* ─────────────────────────────────────────────────────────
+   LB Prestige — Client Space Animations
+   Premium micro-animations for a luxury experience
+   ───────────────────────────────────────────────────────── */
+
+/* ── Fade & Slide entrances ── */
+@keyframes lb-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes lb-slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes lb-slide-down {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes lb-slide-left {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes lb-slide-right {
+  from { opacity: 0; transform: translateX(-24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes lb-scale-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ── Gold shimmer effect (for loading states & decorative) ── */
+@keyframes lb-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── Parallax float ── */
+@keyframes lb-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* ── Pulse glow (for WhatsApp CTA, notifications) ── */
+@keyframes lb-pulse-gold {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(43 86% 46% / 0.5); }
+  50% { box-shadow: 0 0 0 12px hsl(43 86% 46% / 0); }
+}
+
+/* ── Star pop (for review rating) ── */
+@keyframes lb-star-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+/* ── Check draw (for success states) ── */
+@keyframes lb-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ── Dot typing indicator ── */
+@keyframes lb-typing-dot {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+
+/* ── Gradient rotation (subtle background) ── */
+@keyframes lb-gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ── Confetti burst (review success) ── */
+@keyframes lb-confetti {
+  0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+  100% { opacity: 0; transform: translateY(-200px) rotate(720deg) scale(0); }
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   Utility classes
+   ═══════════════════════════════════════════════════════ */
+
+.animate-fade-in {
+  animation: lb-fade-in 0.5s ease-out both;
+}
+.animate-slide-up {
+  animation: lb-slide-up 0.5s ease-out both;
+}
+.animate-slide-down {
+  animation: lb-slide-down 0.4s ease-out both;
+}
+.animate-slide-left {
+  animation: lb-slide-left 0.4s ease-out both;
+}
+.animate-slide-right {
+  animation: lb-slide-right 0.4s ease-out both;
+}
+.animate-scale-in {
+  animation: lb-scale-in 0.4s ease-out both;
+}
+.animate-float {
+  animation: lb-float 3s ease-in-out infinite;
+}
+.animate-pulse-gold {
+  animation: lb-pulse-gold 2s ease-in-out infinite;
+}
+.animate-star-pop {
+  animation: lb-star-pop 0.3s ease-out;
+}
+
+/* Shimmer skeleton / decorative */
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(43 86% 46% / 0.08) 0%,
+    hsl(43 86% 46% / 0.22) 50%,
+    hsl(43 86% 46% / 0.08) 100%
+  );
+  background-size: 200% 100%;
+  animation: lb-shimmer 2s ease-in-out infinite;
+}
+
+/* Gradient background shift */
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: lb-gradient-shift 6s ease infinite;
+}
+
+/* Typing indicator */
+.typing-dot {
+  animation: lb-typing-dot 1.4s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+/* Stagger delays for lists */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.10s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.20s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.30s; }
+.stagger-7 { animation-delay: 0.35s; }
+.stagger-8 { animation-delay: 0.40s; }
+
+/* ═══════════════════════════════════════════════════════
+   Premium UI enhancements
+   ═══════════════════════════════════════════════════════ */
+
+/* Glassmorphism card */
+.glass {
+  background: hsl(0 0% 10% / 0.6);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid hsl(43 86% 46% / 0.15);
+}
+
+/* Gold glow ring (for featured elements) */
+.ring-gold-glow {
+  box-shadow:
+    0 0 0 1px hsl(43 86% 46% / 0.3),
+    0 0 20px -4px hsl(43 86% 46% / 0.2);
+}
+
+/* Premium custom scrollbar for client space */
+.client-theme ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.client-theme ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.client-theme ::-webkit-scrollbar-thumb {
+  background: hsl(43 86% 46% / 0.3);
+  border-radius: 3px;
+}
+.client-theme ::-webkit-scrollbar-thumb:hover {
+  background: hsl(43 86% 46% / 0.5);
+}
+
+/* Gold text selection */
+.client-theme ::selection {
+  background: hsl(43 86% 46% / 0.35);
+  color: #F5F0E8;
+}
+
+/* Smooth page transitions */
+.page-transition-enter {
+  animation: lb-slide-up 0.35s ease-out both;
+}
+.page-transition-exit {
+  animation: lb-fade-in 0.2s ease-in reverse both;
+}
+
+/* Copy button feedback */
+.copy-flash {
+  animation: lb-scale-in 0.2s ease-out;
+}
+
+/* Bottom tab bar for mobile */
+.bottom-tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: hsl(0 0% 6% / 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid hsl(43 86% 46% / 0.2);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
