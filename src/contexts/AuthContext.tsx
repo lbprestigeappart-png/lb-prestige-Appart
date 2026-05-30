@@ -34,15 +34,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    supabase.auth.getSession().then(async ({ data }) => {
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      if (data.session?.user) {
-        const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", data.session.user.id);
-        setIsAdmin((roles ?? []).some((r) => r.role === "admin" || r.role === "owner"));
+    (async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+        if (data.session?.user) {
+          const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", data.session.user.id);
+          setIsAdmin((roles ?? []).some((r) => r.role === "admin" || r.role === "owner"));
+        }
+      } catch (e: any) {
+        // Stale/invalid refresh token — clear local session so login can proceed
+        if (e?.code === "refresh_token_not_found" || /Refresh Token/i.test(e?.message ?? "")) {
+          try { await supabase.auth.signOut(); } catch {}
+          try {
+            Object.keys(localStorage)
+              .filter((k) => k.startsWith("sb-") && k.endsWith("-auth-token"))
+              .forEach((k) => localStorage.removeItem(k));
+          } catch {}
+        }
+        setSession(null);
+        setUser(null);
+        setIsAdmin(false);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    })();
 
     return () => sub.subscription.unsubscribe();
   }, []);
