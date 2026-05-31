@@ -36,6 +36,8 @@ export default function IdentitesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
+  // Signed URLs for private id-documents bucket, keyed by document id
+  const [signedUrls, setSignedUrls] = useState<Record<string, { front: string | null; back: string | null }>>({});
 
   async function load() {
     const { data, error } = await supabase
@@ -76,10 +78,42 @@ export default function IdentitesPage() {
     return () => { supabase.removeChannel(ch); };
   }, []);
 
-  function getImageUrl(path: string | null): string | null {
-    if (!path) return null;
-    return supabase.storage.from("id-documents").getPublicUrl(path).data.publicUrl;
+  function getImageUrl(docId: string, side: "front" | "back"): string | null {
+    return signedUrls[docId]?.[side] ?? null;
   }
+
+  // Generate signed URLs (private bucket) when a document card is expanded
+  useEffect(() => {
+    if (!expanded) return;
+    if (signedUrls[expanded]) return; // already loaded
+    const doc = docs.find((d) => d.id === expanded);
+    if (!doc) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const sign = async (path: string | null) => {
+          if (!path) return null;
+          const { data, error } = await supabase.storage
+            .from("id-documents")
+            .createSignedUrl(path, 60 * 60); // valid 1h
+          if (error) {
+            console.error("Signed URL error:", error);
+            return null;
+          }
+          return data?.signedUrl ?? null;
+        };
+        const [front, back] = await Promise.all([sign(doc.front_path), sign(doc.back_path)]);
+        if (!cancelled) {
+          setSignedUrls((prev) => ({ ...prev, [doc.id]: { front, back } }));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [expanded, docs, signedUrls]);
 
   // Filter
   const filtered = docs.filter((d) => {
@@ -170,8 +204,8 @@ export default function IdentitesPage() {
             const fullName = `${client?.first_name ?? ""} ${client?.last_name ?? ""}`.trim();
             const isComplete = !!doc.id_number && !!doc.front_path && !!doc.back_path;
             const isExpanded = expanded === doc.id;
-            const frontUrl = getImageUrl(doc.front_path);
-            const backUrl = getImageUrl(doc.back_path);
+            const frontUrl = getImageUrl(doc.id, "front");
+            const backUrl = getImageUrl(doc.id, "back");
 
             return (
               <Card key={doc.id} className="bg-card border-border overflow-hidden">
@@ -226,26 +260,32 @@ export default function IdentitesPage() {
                       {/* Front photo */}
                       <div className="p-3 bg-secondary/30 rounded-lg border border-border">
                         <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Photo Recto</div>
-                        {frontUrl ? (
-                          <div className="relative group">
-                            <img
-                              src={frontUrl}
-                              alt="CNI Recto"
-                              className="w-full h-32 object-cover rounded-md border border-border"
-                            />
-                            <div className="absolute inset-0 bg-noir/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center gap-2">
-                              <a href={frontUrl} target="_blank" rel="noreferrer">
-                                <Button size="sm" variant="ghost" className="text-foreground hover:text-gold">
-                                  <Eye className="w-4 h-4 mr-1" /> Voir
-                                </Button>
-                              </a>
-                              <a href={frontUrl} download>
-                                <Button size="sm" variant="ghost" className="text-foreground hover:text-gold">
-                                  <Download className="w-4 h-4 mr-1" /> Télécharger
-                                </Button>
-                              </a>
+                        {doc.front_path ? (
+                          frontUrl ? (
+                            <div className="relative group">
+                              <img
+                                src={frontUrl}
+                                alt="CNI Recto"
+                                className="w-full h-32 object-cover rounded-md border border-border"
+                              />
+                              <div className="absolute inset-0 bg-noir/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center gap-2">
+                                <a href={frontUrl} target="_blank" rel="noreferrer">
+                                  <Button size="sm" variant="ghost" className="text-foreground hover:text-gold">
+                                    <Eye className="w-4 h-4 mr-1" /> Voir
+                                  </Button>
+                                </a>
+                                <a href={frontUrl} download>
+                                  <Button size="sm" variant="ghost" className="text-foreground hover:text-gold">
+                                    <Download className="w-4 h-4 mr-1" /> Télécharger
+                                  </Button>
+                                </a>
+                              </div>
                             </div>
-                          </div>
+                          ) : (
+                            <div className="h-32 flex items-center justify-center border border-dashed border-border rounded-md">
+                              <div className="w-5 h-5 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+                            </div>
+                          )
                         ) : (
                           <div className="h-32 flex items-center justify-center text-xs text-muted-foreground border border-dashed border-border rounded-md">
                             Non envoyé
@@ -256,26 +296,32 @@ export default function IdentitesPage() {
                       {/* Back photo */}
                       <div className="p-3 bg-secondary/30 rounded-lg border border-border">
                         <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Photo Verso</div>
-                        {backUrl ? (
-                          <div className="relative group">
-                            <img
-                              src={backUrl}
-                              alt="CNI Verso"
-                              className="w-full h-32 object-cover rounded-md border border-border"
-                            />
-                            <div className="absolute inset-0 bg-noir/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center gap-2">
-                              <a href={backUrl} target="_blank" rel="noreferrer">
-                                <Button size="sm" variant="ghost" className="text-foreground hover:text-gold">
-                                  <Eye className="w-4 h-4 mr-1" /> Voir
-                                </Button>
-                              </a>
-                              <a href={backUrl} download>
-                                <Button size="sm" variant="ghost" className="text-foreground hover:text-gold">
-                                  <Download className="w-4 h-4 mr-1" /> Télécharger
-                                </Button>
-                              </a>
+                        {doc.back_path ? (
+                          backUrl ? (
+                            <div className="relative group">
+                              <img
+                                src={backUrl}
+                                alt="CNI Verso"
+                                className="w-full h-32 object-cover rounded-md border border-border"
+                              />
+                              <div className="absolute inset-0 bg-noir/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center gap-2">
+                                <a href={backUrl} target="_blank" rel="noreferrer">
+                                  <Button size="sm" variant="ghost" className="text-foreground hover:text-gold">
+                                    <Eye className="w-4 h-4 mr-1" /> Voir
+                                  </Button>
+                                </a>
+                                <a href={backUrl} download>
+                                  <Button size="sm" variant="ghost" className="text-foreground hover:text-gold">
+                                    <Download className="w-4 h-4 mr-1" /> Télécharger
+                                  </Button>
+                                </a>
+                              </div>
                             </div>
-                          </div>
+                          ) : (
+                            <div className="h-32 flex items-center justify-center border border-dashed border-border rounded-md">
+                              <div className="w-5 h-5 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+                            </div>
+                          )
                         ) : (
                           <div className="h-32 flex items-center justify-center text-xs text-muted-foreground border border-dashed border-border rounded-md">
                             Non envoyé
